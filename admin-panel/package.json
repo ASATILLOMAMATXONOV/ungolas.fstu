@@ -1,0 +1,59 @@
+{
+  "name": "admin-panel",
+  "homepage": "https://aes.fstu.uz/admin",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+    "@ckeditor/ckeditor5-image": "^45.2.1",
+    "@ckeditor/ckeditor5-react": "^11.0.0",
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.15.14",
+    "@mui/material": "^5.15.14",
+    "assert": "^2.1.0",
+    "axios": "^1.10.0",
+    "browserify-zlib": "^0.2.0",
+    "ckeditor4": "^4.25.1",
+    "ckeditor4-react": "^5.2.1",
+    "crypto-browserify": "^3.12.1",
+    "framer-motion": "^12.18.1",
+    "highlight.js": "^11.11.1",
+    "https-browserify": "^1.0.0",
+    "lucide-react": "^0.284.0",
+    "pg": "^8.16.0",
+    "quill": "^2.0.3",
+    "quill-table-ui": "^1.0.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.5.0",
+    "react-quill": "^2.0.0",
+    "react-router-dom": "^6.22.3",
+    "react-scripts": "5.0.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.4",
+    "util": "^0.12.5"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.3.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

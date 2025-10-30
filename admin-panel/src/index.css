@@ -1,0 +1,60 @@
+/* Tailwind asoslari */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ====== Quill editor styling ====== */
+.ql-toolbar.ql-snow,
+.ql-container.ql-snow {
+  border: 1px solid #ccc;
+}
+
+/* Font settings for icons */
+.ql-toolbar .ql-picker-label::before,
+.ql-toolbar .ql-picker-item::before,
+.ql-toolbar button::before {
+  font-family: 'QuillIcons', 'Material Icons', 'FontAwesome', sans-serif !important;
+  font-style: normal;
+  font-weight: normal;
+  text-transform: none;
+  speak: none;
+  line-height: 1;
+}
+
+/* ====== Scroll oldini olish va img ni kichik ko‘rsatish ====== */
+
+/* ReactQuill editor container */
+
+.ql-snow .ql-editor img {
+  max-width: 60%;
+
+}
+
+
+.ql-container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Editorning matn qismi */
+.ql-editor {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  padding-right: 0 !important;
+}
+
+/* Har qanday img scroll chaqirmasligi va kichik chiqishi uchun */
+
+
+/* Parent container scroll chiqarib yubormasligi uchun */
+.editor-wrapper {
+  overflow-x: hidden;
+  max-width: 100%; /* ✅ Ekranni to‘liq egallasin */
+}
+
+/* Butun sahifada scroll chiqmasligi uchun */
+body, html {
+  overflow-x: hidden;
+}
