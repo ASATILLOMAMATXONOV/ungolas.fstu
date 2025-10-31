@@ -1,10 +1,11 @@
-// config.js
+// src/config.js
 
-// Backend URL
-export const BASE_URL = "http://localhost:4000"; 
+// Backend URL — backend serveringiz qayerda ishlayotgan bo‘lsa, o‘sha
+export const BASE_URL = "http://localhost:5000";
 
-// API URL
+// API URL — backend ichidagi barcha endpointlar shu orqali ishlaydi
 export const BASE_API_URL = `${BASE_URL}/api`;
 
-// Frontend URL (agar kerak bo‘lsa)
+
+// Frontend URL — agar kerak bo‘lsa (masalan, CORS uchun)
 export const BASE_FRONT_URL = "http://localhost:3000";

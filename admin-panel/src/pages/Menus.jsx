@@ -1,162 +1,305 @@
-import React, { useState, useEffect } from "react";
-import { BASE_API_URL, BASE_URL } from "../config";
+import React, { useState, useRef } from "react";
+import {
+  Box,
+  Button,
+  Paper,
+  TextField,
+  Typography,
+  Stack,
+  Switch,
+  FormGroup,
+  Tooltip,
+  Fade,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import { Editor } from "@tinymce/tinymce-react";
+import { CheckCircle, Cancel } from "@mui/icons-material";
+import { BASE_API_URL } from "../config";
+import { useNavigate } from "react-router-dom";
 
 const Menus = () => {
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [allBanners, setAllBanners] = useState([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const navigate = useNavigate();
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
+  const [menuData, setMenuData] = useState({
+    uz: { title: "", content: "" },
+    ru: { title: "", content: "" },
+    en: { title: "", content: "" },
+  });
+
+  const [hasContent, setHasContent] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState({ open: false, message: "", type: "info" });
+
+  const editorRefs = {
+    uz: useRef(null),
+    ru: useRef(null),
+    en: useRef(null),
   };
 
-const handleUpload = async () => {
-  if (!selectedImage) {
-    alert("❗ Iltimos, rasm tanlang.");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("image", selectedImage);
-  formData.append("title", title);          // ✅ qo‘shildi
-  formData.append("description", description); // ✅ qo‘shildi
-
-  try {
-    const res = await fetch(`${BASE_API_URL}/upload`, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (res.ok) {
-      alert("✅ Rasm va ma’lumot SQL ga saqlandi!");
-      setSelectedImage(null);
-      setPreviewUrl(null);
-      setTitle("");
-      setDescription("");
-      fetchAllBanners();
-    } else {
-      const errorText = await res.text();
-      alert("❌ Yuklashda xato: " + errorText);
-    }
-  } catch (error) {
-    alert("❌ Tarmoq xatosi: " + error.message);
-  }
-};
-
-
-  const fetchAllBanners = async () => {
-    try {
-      const res = await fetch(`${BASE_API_URL}/banners`);
-      if (res.ok) {
-        const data = await res.json();
-        setAllBanners(data);
-      }
-    } catch (error) {
-      console.error("❌ Bannerlarni olishda xato:", error);
-    }
+  const handleChange = (lang, field, value) => {
+    setMenuData((prev) => ({
+      ...prev,
+      [lang]: { ...prev[lang], [field]: value },
+    }));
   };
 
-  const handleDelete = async (id) => {
+  const handleSubmit = async () => {
+    setLoading(true);
+
+    const payload = {
+      title_uz: menuData.uz.title.trim(),
+      title_ru: menuData.ru.title.trim(),
+      title_en: menuData.en.title.trim(),
+      content_uz: hasContent ? menuData.uz.content.trim() : "",
+      content_ru: hasContent ? menuData.ru.content.trim() : "",
+      content_en: hasContent ? menuData.en.content.trim() : "",
+      has_content: hasContent,
+    };
+
+    // 🔹 SHU YERDA MANTIQLI TEKSHIRUV
+    const hasAnyData =
+      payload.title_uz ||
+      payload.title_ru ||
+      payload.title_en ||
+      payload.content_uz ||
+      payload.content_ru ||
+      payload.content_en;
+
+    if (!hasAnyData) {
+      setAlert({
+        open: true,
+        message: "⚠️ Iltimos, kamida bitta sarlavha yoki kontent kiriting!",
+        type: "warning",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await fetch(`${BASE_API_URL}/banners/${id}`, {
-        method: "DELETE",
+      const res = await fetch(`${BASE_API_URL}/menus`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        alert("🗑 Rasm o‘chirildi");
-        fetchAllBanners();
+        setAlert({
+          open: true,
+          message: "✅ Ma’lumotlar bazaga saqlandi!",
+          type: "success",
+        });
+
+        // 🔹 Formani tozalash
+        setMenuData({
+          uz: { title: "", content: "" },
+          ru: { title: "", content: "" },
+          en: { title: "", content: "" },
+        });
+
+        Object.keys(editorRefs).forEach((lang) => {
+          if (editorRefs[lang].current) {
+            editorRefs[lang].current.setContent("");
+          }
+        });
+
+        setTimeout(() => navigate("/menu"), 700);
       } else {
-        const errorText = await res.text();
-        alert("❌ O‘chirishda xato: " + errorText);
+        const errText = await res.text();
+        setAlert({
+          open: true,
+          message: "❌ Server xatosi: " + errText,
+          type: "error",
+        });
       }
-    } catch (error) {
-      alert("❌ Server bilan bog‘lanishda xatolik");
+    } catch (err) {
+      setAlert({
+        open: true,
+        message: "❌ Tarmoq xatosi: " + err.message,
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchAllBanners();
-  }, []);
-
   return (
-    <div className="p-6 space-y-6">
-      <h2 className="text-2xl font-bold">🖼 Rasm Yuklash</h2>
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5" fontWeight="bold" gutterBottom>
+        🧩 Create Menu
+      </Typography>
 
-      <div className="space-y-4">
-       <input
-          type="text"
-          placeholder="Sarlavha (title)"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="block border p-2 rounded w-full"
-        />
-        <textarea
-          placeholder="Tavsif (description)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="block border p-2 rounded w-full"
-        />
+      {/* --- TITLE INPUTS --- */}
+      <Paper sx={{ p: 3, mb: 4 }} elevation={3}>
+        <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
+          Sarlavhalar
+        </Typography>
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="block"
-        />
-
-        {previewUrl && (
-          <img
-            src={previewUrl}
-            alt="Ko‘rib chiqish"
-            className="max-w-md rounded-md border shadow"
-          />
-        )}
-
-        <button
-          onClick={handleUpload}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Yuklash
-        </button>
-      </div>
-
-      <hr className="my-6 border-t-2 border-gray-300" />
-
-      <h3 className="text-xl font-semibold text-gray-800">📦 Saqlangan Rasmlar</h3>
-      {allBanners.length > 0 ? (
-        allBanners.map((banner) => (
-          <div
-            key={banner.id}
-            className="border border-gray-300 rounded-md p-4 mb-6 shadow-sm bg-white"
-          >
-            <div className="flex justify-between items-center mb-2">
-              <p className="text-sm text-gray-700 font-mono">🆔 ID: {banner.id}</p>
-              <button
-                onClick={() => handleDelete(banner.id)}
-                className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
-              >
-                🗑 O‘chirish
-              </button>
-            </div>
-            <h4 className="font-bold">{banner.title}</h4>
-            <p className="text-gray-600">{banner.description}</p>
-            <img
-              src={`${BASE_URL}${banner.image_url}`}
-              alt="Banner"
-              style={{ maxWidth: "30%", borderRadius: "8px" }}
+        <Stack direction="column" spacing={2}>
+          {["uz", "ru", "en"].map((lang) => (
+            <TextField
+              key={lang}
+              label={`Sarlavha (${lang.toUpperCase()})`}
+              variant="outlined"
+              fullWidth
+              value={menuData[lang].title}
+              onChange={(e) => handleChange(lang, "title", e.target.value)}
             />
-          </div>
-        ))
-      ) : (
-        <p className="text-gray-500">Hech qanday rasm mavjud emas.</p>
+          ))}
+        </Stack>
+      </Paper>
+
+      {/* --- CHIROYLI SWITCH (animated) --- */}
+      <FormGroup sx={{ mb: 3 }}>
+        <Tooltip title="Kontent bo‘lsa yoqing, bo‘lmasa o‘chiring" arrow>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              borderRadius: 2,
+              p: 1.5,
+              backgroundColor: hasContent ? "#e8f5e9" : "#ffebee",
+              transition: "all 0.3s ease",
+              boxShadow: hasContent
+                ? "0 0 6px rgba(76,175,80,0.3)"
+                : "0 0 6px rgba(244,67,54,0.3)",
+            }}
+          >
+            <Switch
+              checked={hasContent}
+              onChange={(e) => setHasContent(e.target.checked)}
+              color={hasContent ? "success" : "error"}
+            />
+
+            <Fade in={true} timeout={500}>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                {hasContent ? (
+                  <>
+                    <CheckCircle color="success" />
+                    <Typography fontWeight="500" color="green">
+                      Bu menyuda kontent mavjud
+                    </Typography>
+                  </>
+                ) : (
+                  <>
+                    <Cancel color="error" />
+                    <Typography fontWeight="500" color="error">
+                      Bu menyuda kontent mavjud emas
+                    </Typography>
+                  </>
+                )}
+              </Stack>
+            </Fade>
+          </Box>
+        </Tooltip>
+      </FormGroup>
+
+      {/* --- CONTENT EDITORS --- */}
+      {hasContent && (
+        <Fade in={hasContent} timeout={700}>
+          <Paper sx={{ p: 3 }} elevation={3}>
+            <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
+              Kontentlar
+            </Typography>
+
+            <Stack direction="column" spacing={4}>
+              {["uz", "ru", "en"].map((lang) => (
+                <Box key={lang}>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="medium"
+                    sx={{ mb: 1 }}
+                  >
+                    Content ({lang.toUpperCase()})
+                  </Typography>
+                  <Editor
+                    onInit={(evt, editor) =>
+                      (editorRefs[lang].current = editor)
+                    }
+                    apiKey="oz1anr2rkjjim9zxiypl9te00gazqqq43epqosng505m0ddf"
+                    value={menuData[lang].content}
+                    init={{
+                      height: 400,
+                      menubar: "file edit view insert format tools table help",
+                      plugins: [
+                        "advlist",
+                        "autolink",
+                        "lists",
+                        "link",
+                        "image",
+                        "charmap",
+                        "preview",
+                        "anchor",
+                        "searchreplace",
+                        "visualblocks",
+                        "code",
+                        "fullscreen",
+                        "insertdatetime",
+                        "media",
+                        "table",
+                        "help",
+                        "wordcount",
+                        "emoticons",
+                      ],
+                      toolbar:
+                        "undo redo | blocks | bold italic underline forecolor backcolor | " +
+                        "alignleft aligncenter alignright alignjustify | bullist numlist | link image | " +
+                        "removeformat | code fullscreen preview help",
+                      content_style:
+                        "body { font-family:Helvetica,Arial,sans-serif; font-size:16px }",
+                    }}
+                    onEditorChange={(content) =>
+                      handleChange(lang, "content", content)
+                    }
+                  />
+                </Box>
+              ))}
+            </Stack>
+          </Paper>
+        </Fade>
       )}
-    </div>
+
+      {/* --- SUBMIT BUTTON --- */}
+      <Box textAlign="right" mt={4}>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          onClick={handleSubmit}
+          disabled={loading}
+          sx={{
+            borderRadius: 3,
+            px: 3,
+            py: 1.2,
+            fontWeight: "bold",
+            textTransform: "none",
+            boxShadow: "0 3px 6px rgba(0,0,0,0.1)",
+            transition: "all 0.3s ease",
+            "&:hover": { transform: "scale(1.03)" },
+          }}
+        >
+          {loading ? "⏳ Saqlanmoqda..." : "💾 Saqlash"}
+        </Button>
+      </Box>
+
+      {/* --- Snackbar (alert) --- */}
+      <Snackbar
+        open={alert.open}
+        autoHideDuration={2500}
+        onClose={() => setAlert({ ...alert, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setAlert({ ...alert, open: false })}
+          severity={alert.type}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {alert.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

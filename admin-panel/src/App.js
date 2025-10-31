@@ -4,7 +4,8 @@ import AdminLayout from "./layout/AdminLayout";
 import Dashboard from "./pages/Dashboard";
 
 import Menus from "./pages/Menus";
-
+import Menu from "./pages/Menu";
+import MenuEdit from "./pages/MenuEdit";
 
 
 
@@ -36,6 +37,8 @@ function App() {
         <Route index element={<Dashboard />} />
 
         <Route path="Menus" element={<Menus />} />
+        <Route path="Menu" element={<Menu />} />
+        <Route path="/menus/edit/:id" element={<MenuEdit />} />
 
 
 

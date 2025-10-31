@@ -35,7 +35,7 @@ const Sidebar = () => {
   const navItems = [
     { name: "Dashboard", path: "/", icon: <LayoutDashboard size={22} /> },
 
-    { name: "Menus", path: "/Menus", icon: <Image size={22} /> },
+    { name: "Menu", path: "/Menu", icon: <Image size={22} /> },
 
 
 
