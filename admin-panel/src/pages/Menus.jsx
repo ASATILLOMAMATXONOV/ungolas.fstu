@@ -243,15 +243,52 @@ const Menus = () => {
                         "emoticons",
                       ],
                       toolbar:
-                        "undo redo | blocks | bold italic underline forecolor backcolor | " +
-                        "alignleft aligncenter alignright alignjustify | bullist numlist | link image | " +
-                        "removeformat | code fullscreen preview help",
-                      content_style:
-                        "body { font-family:Helvetica,Arial,sans-serif; font-size:16px }",
-                    }}
-                    onEditorChange={(content) =>
-                      handleChange(lang, "content", content)
-                    }
+    "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | " +
+    "alignleft aligncenter alignright alignjustify lineheight | bullist numlist outdent indent | link image media table | " +
+    "removeformat | code fullscreen preview help",
+                      images_upload_url: `${BASE_API_URL}/upload`,
+                      automatic_uploads: true,
+                      file_picker_types: "image",
+                      file_picker_callback: (cb, value, meta) => {
+                      const input = document.createElement("input");
+                      input.setAttribute("type", "file");
+                      input.setAttribute("accept", "image/*");
+  
+                      input.onchange = async function () {
+                          const file = this.files[0];
+                          const formData = new FormData();
+                          formData.append("file", file);
+  
+                          try {
+                          const res = await fetch(`${BASE_API_URL}/upload`, {
+                              method: "POST",
+                              body: formData,
+                          });
+                          const data = await res.json();
+                          cb(`${BASE_API_URL.replace("/api", "")}${data.location}`, {
+                              title: file.name,
+                          });
+                          } catch (err) {
+                          console.error("❌ Yuklashda xato:", err);
+                          }
+                      };
+  
+                      input.click();
+                      },
+                      content_style: `
+                      body { 
+                          font-family: Helvetica, Arial, sans-serif; 
+                          font-size: 16px; 
+                          line-height: 1.6; 
+                          color: #333; 
+                      }
+                      img { 
+                          max-width: 100%; 
+                          height: auto; 
+                          border-radius: 6px;
+                      }
+                      `,
+                  }}
                   />
                 </Box>
               ))}
@@ -261,7 +298,22 @@ const Menus = () => {
       )}
 
       {/* --- SUBMIT BUTTON --- */}
-      <Box textAlign="right" mt={4}>
+     <Box textAlign="right" mt={4} display="flex" justifyContent="right" gap={2} >
+
+       <Button
+                variant="outlined"
+                color="error"
+                onClick={() => navigate("/menu")}
+                sx={{
+                  borderRadius: 3,
+                  px: 3,
+                  py: 1.2,
+                  fontWeight: "bold",
+                  textTransform: "none",
+                }}
+              >
+                🔙 Bekor qilish
+              </Button>
         <Button
           variant="contained"
           color="primary"

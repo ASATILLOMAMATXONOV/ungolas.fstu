@@ -5,10 +5,12 @@
 "use strict";
 const { Model } = require("sequelize");
 
+
 module.exports = (sequelize, DataTypes) => {
   class Menu extends Model {
     static associate(models) {
       // Masalan, agar sizda "SubMenu" bo‘lsa:
+      
       // this.hasMany(models.SubMenu, { foreignKey: "menuId" });
     }
   }

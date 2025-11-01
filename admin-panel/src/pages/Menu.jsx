@@ -135,7 +135,7 @@ const Menu = () => {
         <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-              <TableCell sx={{ fontWeight: "bold", width: "5%" }}>#</TableCell>
+              <TableCell sx={{ fontWeight: "bold", width: "5%" }}>ID</TableCell>
               <TableCell sx={{ fontWeight: "bold", width: "60%" }}>
                 Sarlavha (UZ)
               </TableCell>
@@ -166,7 +166,8 @@ const Menu = () => {
                     },
                   }}
                 >
-                  <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                   {/* 🔹 Shu yerda id chiqariladi */}
+                 <TableCell>{menu.id}</TableCell>
                   <TableCell>
                     <Typography fontWeight="500">{menu.title_uz}</Typography>
                   </TableCell>

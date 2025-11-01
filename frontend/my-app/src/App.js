@@ -5,29 +5,45 @@ import Home from "./pages/Home";
 import GoalsSection from "./pages/GoalsSection";
 import SDGSection from "./pages/SDGSection";
 import Footer from "./components/Footer";
-import BackToTop from "./components/BackToTop";
-import VisitorCounter from "./components/VisitorCounter";
-
+import { LanguageProvider } from "./context/LanguageContext";
+import GoalDetail from "./pages/GoalDetail";
 
 function App() {
   return (
-    <Router>
-      {/* Navbar har doim tepada */}
-      <Navbar />
-      <Home />
-      <GoalsSection /> 
-      <SDGSection />
-      <Footer />
-      <BackToTop />
-      <VisitorCounter />
-        {/* <Box sx={{ py: 4 }}>
-          <Routes>
-            
-         
-          </Routes>
-        </Box> */}
+    // 🌍 Butun ilovani LanguageProvider bilan o‘raymiz
+    <LanguageProvider>
+      <Router>
+        {/* 🧭 Navbar har doim tepada */}
+        <Navbar />
 
-    </Router>
+        {/* 📍 Barcha sahifalar shu yerda yo‘naltiriladi */}
+        <Routes>
+          {/* 🏠 Bosh sahifa */}
+          <Route
+            path="/"
+            element={
+              <>
+                <Home />
+                <GoalsSection />
+                <SDGSection />
+                <Footer />
+              </>
+            }
+          />
+
+          {/* 🎯 Maqsad sahifasi (Kirish bosilganda ochiladi) */}
+          <Route
+            path="/goal/:id"
+            element={
+              <>
+                <GoalDetail />
+                
+              </>
+            }
+          />
+        </Routes>
+      </Router>
+    </LanguageProvider>
   );
 }
 

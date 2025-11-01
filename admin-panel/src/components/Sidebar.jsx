@@ -4,16 +4,9 @@ import {
   LayoutDashboard,
   Book,
   Menu,
-  Newspaper,
-  PanelRight,
-  Image,
   TableProperties,
-  Users,
-  PlusSquare,
-  Atom,
-  Building2,
-  ListOrdered,
-  Indent,
+ Indent,
+ Type ,
 } from "lucide-react";
 import profileImg from "../assets/profile.png";
 
@@ -34,24 +27,27 @@ const Sidebar = () => {
 
   const navItems = [
     { name: "Dashboard", path: "/", icon: <LayoutDashboard size={22} /> },
+    { name: "Menu", path: "/Menu", icon: <Menu size={22} /> },
 
-    { name: "Menu", path: "/Menu", icon: <Image size={22} /> },
+    { name: "Submenu", path: "/Dropdown", icon: <Indent size={22} /> },
+
+     { name: "Home Title", path: "/HomeTitle", icon: <Type size={22} /> },
+
+     { name: "SDG IMG", path: "/HomeBannerCrud", icon: <TableProperties size={22} /> },
+
+
+
+     { name: "Pages", path: "/Pages", icon: <Book size={22} /> },
+    
 
 
 
 
 
-    { name: "Menuse", path: "/menuse", icon: <Menu size={22} /> },
-    { name: "Submenu", path: "/menusFrom", icon: <Indent size={22} /> },
-    { name: "Submenu Table", path: "/submenu", icon: <TableProperties size={22} /> },
-    { name: "Top menu", path: "/Topmenu", icon: <ListOrdered size={22} /> },
-    { name: "Page", path: "/Page", icon: <Book size={22} /> },
-    { name: "News & Event", path: "/NewsEvent", icon: <Newspaper size={22} /> },
-    { name: "Staff table", path: "/statistics", icon: <Users size={22} /> },
-    { name: "New-Button", path: "/Newbut", icon: <PlusSquare size={22} /> },
-    { name: "Sidebar", path: "/Side", icon: <PanelRight size={22} /> },
-    { name: "Sciences", path: "/Fanlar", icon: <Atom size={22} /> },
-    { name: "Department", path: "/Department", icon: <Building2 size={22} /> },
+
+
+  
+
   ];
 
   return (

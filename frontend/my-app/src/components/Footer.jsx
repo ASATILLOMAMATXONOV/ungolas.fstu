@@ -7,10 +7,64 @@ import {
   IconButton,
   Container,
 } from "@mui/material";
-import { Facebook, YouTube, Telegram, Email, Phone, Room } from "@mui/icons-material";
-import logo from "../assets/logo (3).png"; // universitet logosi
+import {
+  Facebook,
+  YouTube,
+  Telegram,
+  Email,
+  Phone,
+  Room,
+} from "@mui/icons-material";
+import { useLanguage } from "../context/LanguageContext";
+import logo from "../assets/logo (3).png";
 
 export default function Footer() {
+  const { lang } = useLanguage();
+
+  // 🌍 Matnlar 3 tilda
+  const texts = {
+    uz: {
+      usefulLinks: "Foydali havolalar",
+      home: "Bosh sahifa",
+      fstu: "FSTU",
+      contact: "Aloqa",
+      emailTitle: "Elektron pochta",
+      emailPlaceholder: "Email manzilingiz...",
+      phone: "Telefon",
+      address: "Manzil",
+      addressText: "150107, Farg‘ona shahar, Farg‘ona ko‘chasi 86-uy",
+      bottom: "Farg‘ona davlat texnika universiteti Raqamli ta’lim texnologiyalari markazi - 2025",
+    },
+    ru: {
+      usefulLinks: "Полезные ссылки",
+      home: "Главная страница",
+      fstu: "ФГТУ",
+      contact: "Контакты",
+      emailTitle: "Электронная почта",
+      emailPlaceholder: "Ваш email...",
+      phone: "Телефон",
+      address: "Адрес",
+      addressText: "150107, г. Фергана, ул. Фергана, дом 86",
+      bottom:
+        "Центр цифровых образовательных технологий Ферганского государственного технического университета - 2025",
+    },
+    en: {
+      usefulLinks: "Useful Links",
+      home: "Home",
+      fstu: "FSTU",
+      contact: "Contact",
+      emailTitle: "Email",
+      emailPlaceholder: "Email address...",
+      phone: "Phone",
+      address: "Address",
+      addressText: "86 Fergana Street, Fergana city, 150107",
+      bottom:
+        "Fergana State Technical University Digital Education Technologies Center - 2025",
+    },
+  };
+
+  const t = texts[lang]; // faqat tanlangan tilni olamiz
+
   return (
     <Box
       sx={{
@@ -35,9 +89,7 @@ export default function Footer() {
         }}
       />
 
-      {/* Asosiy container */}
       <Container sx={{ position: "relative", zIndex: 2 }}>
-        {/* 🔹 Flex layout (katta ekranlar uchun) */}
         <Box
           sx={{
             display: "flex",
@@ -47,7 +99,7 @@ export default function Footer() {
             gap: 6,
           }}
         >
-          {/* ✅ Logo va ijtimoiy tarmoqlar */}
+          {/* ✅ Logo qismi */}
           <Box
             sx={{
               display: "flex",
@@ -60,12 +112,9 @@ export default function Footer() {
             <Box
               component="img"
               src={logo}
-              alt="FDTU Logo"
+              alt="FSTU Logo"
               sx={{ width: 130, mb: 1 }}
             />
-
-
-            
           </Box>
 
           {/* 🔗 Foydali havolalar */}
@@ -86,14 +135,14 @@ export default function Footer() {
                 display: "inline-block",
               }}
             >
-              Foydali havolalar
+              {t.usefulLinks}
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 2 }}>
               <Link href="/" color="inherit" underline="hover">
-                Bosh sahifa
+                {t.home}
               </Link>
               <Link href="https://fstu.uz" color="inherit" underline="hover">
-                FSTU
+                {t.fstu}
               </Link>
             </Box>
           </Box>
@@ -116,7 +165,7 @@ export default function Footer() {
                 display: "inline-block",
               }}
             >
-              Aloqa
+              {t.contact}
             </Typography>
             <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 1 }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -126,8 +175,7 @@ export default function Footer() {
                 <Email sx={{ fontSize: 20 }} /> info@fstu.uz
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Room sx={{ fontSize: 20 }} /> 150107, Farg‘ona shahar, Farg‘ona
-                ko‘chasi 86-uy
+                <Room sx={{ fontSize: 20 }} /> {t.addressText}
               </Box>
             </Box>
           </Box>
@@ -150,12 +198,12 @@ export default function Footer() {
                 display: "inline-block",
               }}
             >
-              Elektron pochta
+              {t.emailTitle}
             </Typography>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Email address..."
+              placeholder={t.emailPlaceholder}
               InputProps={{
                 endAdornment: <Email sx={{ color: "gray" }} />,
                 sx: {
@@ -193,8 +241,6 @@ export default function Footer() {
               </IconButton>
             </Box>
           </Box>
-
-          
         </Box>
 
         {/* 🔻 Pastki yozuv */}
@@ -206,9 +252,7 @@ export default function Footer() {
             textAlign: "center",
           }}
         >
-          <Typography sx={{ fontWeight: 500 }}>
-            Farg‘ona davlat texnika universiteti Raqamli ta’lim texnologiyalari markazi - 2025
-          </Typography>
+          <Typography sx={{ fontWeight: 500 }}>{t.bottom}</Typography>
         </Box>
       </Container>
     </Box>

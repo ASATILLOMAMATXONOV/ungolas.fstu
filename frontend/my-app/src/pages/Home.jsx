@@ -1,9 +1,53 @@
-import React from "react";
-import { Box, Typography } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, Typography, CircularProgress } from "@mui/material";
+import { useLanguage } from "../context/LanguageContext";
 import { motion } from "framer-motion";
-import bgVideo from "../assets/video/1.mp4"; // 🎥 o'z video faylingiz
+import bgVideo from "../assets/video/1.mp4";
+import { BASE_API_URL } from "../config";
 
 export default function Home() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { lang } = useLanguage(); // 🌐 kontekstdan tilni olish
+
+  // 🔹 HomeTitle ma’lumotini olish
+  useEffect(() => {
+    const fetchHomeTitle = async () => {
+      try {
+        const res = await fetch(`${BASE_API_URL}/home-titles/latest`);
+        if (!res.ok) throw new Error("Serverdan xato javob keldi");
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error("❌ HomeTitle olishda xato:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHomeTitle();
+  }, []); // faqat bir marta yuklanadi
+
+  // 🌐 Til o‘zgarganda kontentni yangilash
+  useEffect(() => {
+    if (!data) return;
+    // Faqat rerender bo‘ladi, yangi fetch shart emas
+  }, [lang]);
+
+  if (loading)
+    return (
+      <Box
+        sx={{
+          height: "80vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          bgcolor: "white",
+        }}
+      >
+        <CircularProgress color="primary" />
+      </Box>
+    );
+
   return (
     <Box
       sx={{
@@ -46,42 +90,38 @@ export default function Home() {
           width: "100%",
           height: "100%",
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(255, 255, 255, 1) 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(255,255,255,1) 100%)",
           zIndex: -1,
         }}
       />
 
-      {/* 🪄 Animatsiyali matn qismi */}
+      {/* 🪄 Animatsiyali matn */}
       <Box sx={{ px: 2, maxWidth: "1000px" }}>
-        {/* 🔹 Katta sarlavha */}
+        {/* 🔹 Sarlavha */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 1,
-            ease: "easeOut",
-          }}
+          transition={{ duration: 1, ease: "easeOut" }}
         >
           <Typography
             variant="h3"
             sx={{
               mb: 3,
-              fontSize:"50px",
-              fontWeight: "500",
-              color: "#020202ff",
-              // textShadow: "0px 3px 8px rgba(0,0,0,0.5)",
+              fontSize: { xs: "30px", md: "50px" },
+              fontWeight: 600,
+              color: "#020202",
             }}
           >
-            17 Sustainable Development Goals aimed at changing the world
+            {data?.[`title_${lang}`] || "No title"}
           </Typography>
         </motion.div>
 
-        {/* 🔹 Paragraf matn */}
+        {/* 🔹 Kontent (desc_*) */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
-            delay: 0.5, // sarlavhadan keyin chiqadi
+            delay: 0.5,
             duration: 1,
             ease: "easeOut",
           }}
@@ -90,21 +130,17 @@ export default function Home() {
             variant="body1"
             sx={{
               fontSize: "18px",
-              fontWeight: "500",
+              fontWeight: "400",
               lineHeight: 1.8,
               maxWidth: "800px",
               mx: "auto",
-              color: "#000000ff",
-              // textShadow: "0px 2px 6px rgba(0,0,0,0.4)",
+              color: "#000",
             }}
-          >
-            The Sustainable Development Goals, also known as the Global Goals,
-            are universal measures aimed at eradicating poverty, protecting the
-            planet, and bringing peace and prosperity to all people. The goals
-            were endorsed in September 2015 by all UN member states, including
-            Uzbekistan. They include 17 goals and 169 targets that must be
-            achieved by 2030.
-          </Typography>
+            component="div"
+            dangerouslySetInnerHTML={{
+              __html: data?.[`desc_${lang}`] || "",
+            }}
+          />
         </motion.div>
       </Box>
     </Box>
