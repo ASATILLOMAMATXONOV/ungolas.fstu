@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
   CircularProgress,
   Container,
   Paper,
+  Stack,
 } from "@mui/material";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -14,35 +15,57 @@ import { BASE_API_URL } from "../config";
 import backgroundImage from "../assets/iStock-Boonyachoat1.jpg";
 
 export default function GoalDetail() {
-  const { id } = useParams(); // URL orqali kelgan banner_id
+  const { id } = useParams();
   const { lang } = useLanguage();
+  const navigate = useNavigate();
+
   const [pages, setPages] = useState([]);
+  const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Faqat shu banner_id ga tegishli sahifalarni olish
   useEffect(() => {
-    const fetchPages = async () => {
+    let isMounted = true;
+
+    const fetchData = async () => {
       try {
-        const res = await fetch(`${BASE_API_URL}/pages`);
-        const data = await res.json();
+        const [pagesRes, bannersRes] = await Promise.all([
+          fetch(`${BASE_API_URL}/pages`),
+          fetch(`${BASE_API_URL}/banners`),
+        ]);
 
-        // ✅ Faqat shu ID (banner_id) bo‘yicha filterlash
-        const filtered = Array.isArray(data)
-          ? data.filter((item) => String(item.banner_id) === String(id))
-          : [];
+        const [pagesData, bannersData] = await Promise.all([
+          pagesRes.json(),
+          bannersRes.json(),
+        ]);
 
-        setPages(filtered);
+        if (isMounted) {
+          // 🔹 Faqat shu banner_id ga tegishli sahifalarni olish
+          const filtered = Array.isArray(pagesData)
+            ? pagesData.filter((item) => String(item.banner_id) === String(id))
+            : [];
+
+          // 🔹 Takrorlanishni oldini olish
+          const uniquePages = filtered.filter(
+            (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+          );
+
+          setPages(uniquePages);
+          setBanners(bannersData);
+        }
       } catch (err) {
         console.error("❌ Ma’lumot olishda xato:", err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
-    fetchPages();
+
+    fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
-  // ⏳ Yuklanish holati
-  if (loading)
+  if (loading) {
     return (
       <Box
         sx={{
@@ -50,34 +73,26 @@ export default function GoalDetail() {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          background: "#000",
+          backgroundColor: "#f9faf9",
         }}
       >
         <CircularProgress color="success" />
       </Box>
     );
+  }
 
-  // ❌ Agar ma’lumot topilmasa
-  if (!pages || pages.length === 0)
-    return (
-      <Typography align="center" sx={{ color: "white", mt: 10 }}>
-        ❌ Ushbu banner_id ({id}) uchun ma’lumot topilmadi
-      </Typography>
-    );
-
-  // ✅ Sahifa chiqishi
   return (
     <Box
       sx={{
         display: "flex",
         flexDirection: "column",
         minHeight: "100vh",
-        backgroundColor: "#f9faf9",
+        bgcolor: "#f9faf9",
       }}
     >
       <Navbar />
 
-      {/* 🏞️ Banner orqa fon */}
+      {/* 🏞️ Banner fon rasmi */}
       <Box
         sx={{
           position: "relative",
@@ -93,15 +108,8 @@ export default function GoalDetail() {
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            transform: "scale(1.05)",
-            animation: "zoomIn 10s ease-in-out infinite alternate",
-            "@keyframes zoomIn": {
-              "0%": { transform: "scale(1.05)" },
-              "100%": { transform: "scale(1.15)" },
-            },
           }}
         />
-        {/* 🌈 Gradient */}
         <Box
           sx={{
             position: "absolute",
@@ -115,58 +123,91 @@ export default function GoalDetail() {
         />
       </Box>
 
-      {/* 📘 Shu banner_id ga tegishli barcha page-lar */}
+      {/* 📋 Ma’lumotlar */}
       <Container sx={{ my: 8 }}>
-        {pages.map((page, index) => (
-          <Paper
-            key={page.id || index}
-            elevation={4}
-            sx={{
-              p: { xs: 3, md: 4 },
-              borderRadius: 3,
-              bgcolor: "white",
-              maxWidth: "900px",
-              mx: "auto",
-              mb: 4,
-              textAlign: "center",
-              transform: "translateY(0)",
-              animation: `fadeInUp 0.9s ease ${index * 0.15}s both`,
-              "@keyframes fadeInUp": {
-                "0%": { opacity: 0, transform: "translateY(20px)" },
-                "100%": { opacity: 1, transform: "translateY(0)" },
-              },
-              transition: "all 0.4s ease",
-              "&:hover": {
-                boxShadow: "0 8px 25px rgba(0, 161, 82, 0.25)",
-                transform: "translateY(-5px)",
-              },
-            }}
-          >
-            <Typography
-              variant="h6"
+        {pages && pages.length > 0 ? (
+          pages.map((page, index) => (
+            <Paper
+              key={page.id || index}
+              elevation={4}
+              // 🔹 bosilganda GoalList sahifasiga o‘tadi
+              onClick={() => navigate(`/goal-list/${page.id}`)}
               sx={{
-                fontWeight: 700,
-                color: "#009f5d",
-                mb: 1,
-                textShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                p: { xs: 3, md: 4 },
+                borderRadius: 3,
+                bgcolor: "#f6fff8",
+                maxWidth: "900px",
+                mx: "auto",
+                mb: 4,
+                textAlign: "center",
+                cursor: "pointer",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  color: "#007a45",
-                  textShadow: "0 0 12px rgba(0,161,82,0.5)",
-                  transform: "scale(1.03)",
+                  boxShadow: "0 8px 25px rgba(0,161,82,0.25)",
+                  transform: "translateY(-5px)",
                 },
               }}
             >
-              {page[`title_${lang}`]}
-            </Typography>
-          </Paper>
-        ))}
+              {/* 🔹 Faqat Title */}
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  color: "#009f5d",
+                  mb: 2,
+                  wordBreak: "break-word",
+                }}
+              >
+                {page[`title_${lang}`]
+                  ? page[`title_${lang}`]
+                      .replace(/<[^>]*>/g, "") // HTML teglardan tozalaydi
+                      .replace(/&nbsp;/g, " ") // HTML probellarni olib tashlaydi
+                      .trim()
+                  : ""}
+              </Typography>
+
+              {/* 🔹 Faqat Banner Rasmlar */}
+              {Array.isArray(page.banner_ids) && page.banner_ids.length > 0 && (
+                <Stack
+                  direction="row"
+                  justifyContent="center"
+                  spacing={1.5}
+                  sx={{ flexWrap: "wrap", mt: 1 }}
+                >
+                  {page.banner_ids.map((bannerId) => {
+                    const banner = banners.find((b) => b.id === bannerId);
+                    if (!banner) return null;
+
+                    const imgSrc = banner[`image_${lang}`] || banner.image_uz;
+                    return (
+                      <Box
+                        key={bannerId}
+                        component="img"
+                        src={`${BASE_API_URL.replace("/api", "")}${imgSrc}`}
+                        alt={banner[`title_${lang}`]}
+                        sx={{
+                          width: 60,
+                          height: 60,
+                          borderRadius: 1.5,
+                          objectFit: "cover",
+                          transition: "0.3s",
+                          "&:hover": { transform: "scale(1.08)" },
+                        }}
+                      />
+                    );
+                  })}
+                </Stack>
+              )}
+            </Paper>
+          ))
+        ) : (
+          <Typography align="center" sx={{ color: "#777", mt: 10 }}>
+            ❌ Ma’lumot topilmadi
+          </Typography>
+        )}
       </Container>
 
-      {/* ⚪ Footer */}
-      <Box sx={{ flexShrink: 0, mt: "auto" }}>
-        <Footer />
-      </Box>
+      <Footer />
     </Box>
   );
 }

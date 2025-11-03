@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const pageController = require("../controllers/pageController");
 
-// CRUD marshrutlar
 router.get("/", pageController.getAllPages);
 router.get("/:id", pageController.getPageById);
 router.post("/", pageController.createPage);

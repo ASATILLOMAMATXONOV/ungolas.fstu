@@ -12,6 +12,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import { Save } from "@mui/icons-material";
@@ -27,6 +29,7 @@ const PageCrudEdit = () => {
   const [banners, setBanners] = useState([]);
   const [pageData, setPageData] = useState({
     banner_id: "",
+    banner_ids: [],
     title_uz: "",
     title_ru: "",
     title_en: "",
@@ -59,6 +62,7 @@ const PageCrudEdit = () => {
       const data = await res.json();
       setPageData({
         banner_id: data.banner_id || "",
+        banner_ids: data.banner_ids || [],
         title_uz: data.title_uz || "",
         title_ru: data.title_ru || "",
         title_en: data.title_en || "",
@@ -79,6 +83,16 @@ const PageCrudEdit = () => {
   // 🔹 Input o‘zgarishlari
   const handleChange = (field, value) => {
     setPageData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // 🔹 Checkbox boshqaruvi
+  const handleCheckboxChange = (bannerId) => {
+    setPageData((prev) => {
+      const selected = new Set(prev.banner_ids);
+      if (selected.has(bannerId)) selected.delete(bannerId);
+      else selected.add(bannerId);
+      return { ...prev, banner_ids: Array.from(selected) };
+    });
   };
 
   // 💾 Yangilash funksiyasi
@@ -179,11 +193,11 @@ const PageCrudEdit = () => {
 
         {/* --- Banner tanlash --- */}
         <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel id="banner-select-label">Qaysi Banner uchun</InputLabel>
+          <InputLabel id="banner-select-label">Asosiy Banner</InputLabel>
           <Select
             labelId="banner-select-label"
             value={pageData.banner_id}
-            label="Qaysi Banner uchun"
+            label="Asosiy Banner"
             onChange={(e) => handleChange("banner_id", e.target.value)}
           >
             {banners.map((banner) => (
@@ -193,6 +207,54 @@ const PageCrudEdit = () => {
             ))}
           </Select>
         </FormControl>
+
+        {/* --- Qo‘shimcha bannerlar --- */}
+        <Typography variant="h6" mb={1}>
+          Qo‘shimcha bannerlar
+        </Typography>
+        <Stack
+          direction="row"
+          flexWrap="wrap"
+          spacing={2}
+          mb={3}
+          sx={{
+            border: "1px solid #e0e0e0",
+            borderRadius: 2,
+            p: 2,
+            bgcolor: "#fafafa",
+          }}
+        >
+          {banners.map((banner) => (
+            <FormControlLabel
+              key={banner.id}
+              control={
+                <Checkbox
+                  checked={pageData.banner_ids.includes(banner.id)}
+                  onChange={() => handleCheckboxChange(banner.id)}
+                  sx={{
+                    color: "#009f5d",
+                    "&.Mui-checked": { color: "#009f5d" },
+                    transform: "scale(1.2)",
+                  }}
+                />
+              }
+              label={
+                <Typography
+                  sx={{
+                    color: pageData.banner_ids.includes(banner.id)
+                      ? "#007a45"
+                      : "#333",
+                    fontWeight: pageData.banner_ids.includes(banner.id)
+                      ? 600
+                      : 400,
+                  }}
+                >
+                  {banner.title_uz}
+                </Typography>
+              }
+            />
+          ))}
+        </Stack>
 
         {/* --- Sarlavhalar --- */}
         <Typography variant="h6" mb={1}>
@@ -220,120 +282,41 @@ const PageCrudEdit = () => {
               <Typography variant="subtitle1" fontWeight="bold" mb={1}>
                 {lang.toUpperCase()} matni
               </Typography>
-            <Editor
-         apiKey="oz1anr2rkjjim9zxiypl9te00gazqqq43epqosng505m0ddf"
-         value={pageData[`content_${lang}`]}
-         onEditorChange={(content) => handleChange(`content_${lang}`, content)}
-         init={{
-             height: 500,
-             menubar: "file edit view insert format tools table help",
-             plugins: [
-             "advlist",
-             "autolink",
-             "lists",
-             "link",
-             "image",
-             "charmap",
-             "preview",
-             "anchor",
-             "searchreplace",
-             "visualblocks",
-             "code",
-             "fullscreen",
-             "insertdatetime",
-             "media",
-             "table",
-             "help",
-             "wordcount",
-             "emoticons",
-         ],
-         toolbar:
-    "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | " +
-    "alignleft aligncenter alignright alignjustify lineheight | bullist numlist outdent indent | link image media table | " +
-    "removeformat | code fullscreen preview help",
-
-  // 🔹 MUHIM — Word-dan kelgan HTMLni tozalaydi
-  paste_as_text: false,
-  paste_webkit_styles: "none",
-  paste_retain_style_properties: "",
-  paste_merge_formats: true,
-  paste_remove_spans: true,
-  paste_remove_styles_if_webkit: true,
-  paste_strip_class_attributes: "all",
-  invalid_styles: {
-    "*": "font-family,font-size,color,background,margin,padding,text-indent,text-align",
-  },
-  forced_root_block: "p",
-
-  // 🔹 HTMLni soddalashtiruvchi filtr
-  valid_elements:
-    "a[href|target=_blank],strong/b,em/i,u,span[style],p,br,ul,ol,li,img[src|alt|width|height|style],h1,h2,h3,h4,h5,h6,table,tr,td,th,thead,tbody",
-
-             images_upload_url: `${BASE_API_URL}/upload`,
-             automatic_uploads: true,
-             file_picker_types: "image",
-             file_picker_callback: (cb, value, meta) => {
-             const input = document.createElement("input");
-             input.setAttribute("type", "file");
-             input.setAttribute("accept", "image/*");
-            
-             input.onchange = async function () {
-                 const file = this.files[0];
-                 const formData = new FormData();
-                 formData.append("file", file);
-            
-                 try {
-                 const res = await fetch(`${BASE_API_URL}/upload`, {
-                     method: "POST",
-                     body: formData,
-                 });
-                 const data = await res.json();
-                 cb(`${BASE_API_URL.replace("/api", "")}${data.location}`, {
-                     title: file.name,
-                 });
-                 } catch (err) {
-                 console.error("❌ Yuklashda xato:", err);
-                 }
-             };
-            
-             input.click();
-             },
-             content_style: `
-             body { 
-                 font-family: Helvetica, Arial, sans-serif; 
-                 font-size: 16px; 
-                 line-height: 1.6; 
-                 color: #333; 
-             }
-             img { 
-                 max-width: 100%; 
-                 height: auto; 
-                 border-radius: 6px;
-             }
-             `,
-         }}
-         />
+              <Editor
+                apiKey="oz1anr2rkjjim9zxiypl9te00gazqqq43epqosng505m0ddf"
+                value={pageData[`content_${lang}`]}
+                onEditorChange={(content) =>
+                  handleChange(`content_${lang}`, content)
+                }
+                init={editorConfig}
+              />
             </Box>
           ))}
         </Stack>
 
-        {/* --- Saqlash tugmasi --- */}
-      <Box textAlign="right" mt={4} display="flex" justifyContent="right" gap={2} >
-            <Button
-                         variant="outlined"
-                         color="error"
-                         onClick={() => navigate("/pages")}
-                         sx={{
-                           borderRadius: 3,
-                           px: 3,
-                           py: 1.2,
-                           fontWeight: "bold",
-                           textTransform: "none",
-                         }}
-                       >
-                         🔙 Bekor qilish
-                       </Button>
-         
+        {/* --- Tugmalar --- */}
+        <Box
+          textAlign="right"
+          mt={4}
+          display="flex"
+          justifyContent="right"
+          gap={2}
+        >
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={() => navigate("/pages")}
+            sx={{
+              borderRadius: 3,
+              px: 3,
+              py: 1.2,
+              fontWeight: "bold",
+              textTransform: "none",
+            }}
+          >
+            🔙 Bekor qilish
+          </Button>
+
           <Button
             variant="contained"
             color="primary"
@@ -348,7 +331,7 @@ const PageCrudEdit = () => {
               fontWeight: "bold",
             }}
           >
-            {loading ? "⏳ Yangilanmoqda..." : " Saqlash"}
+            {loading ? "⏳ Yangilanmoqda..." : "Saqlash"}
           </Button>
         </Box>
       </Paper>

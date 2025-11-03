@@ -22,18 +22,13 @@ module.exports = (sequelize, DataTypes) => {
           key: "id",
         },
       },
-      title_uz: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      title_ru: {
-        type: DataTypes.STRING,
+      banner_ids: {
+        type: DataTypes.ARRAY(DataTypes.INTEGER),
         allowNull: true,
       },
-      title_en: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
+      title_uz: DataTypes.TEXT,
+      title_ru: DataTypes.TEXT,
+      title_en: DataTypes.TEXT,
       content_uz: DataTypes.TEXT,
       content_ru: DataTypes.TEXT,
       content_en: DataTypes.TEXT,

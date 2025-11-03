@@ -1,20 +1,24 @@
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
-const router = express.Router();
 const controller = require("../controllers/bannerController");
 
-// Fayllar yuklanadigan joy
+const router = express.Router();
+
+// 🔹 Upload sozlamalari
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "../uploads"));
+  },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+    const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9) + path.extname(file.originalname);
+    cb(null, uniqueName);
   },
 });
 
 const upload = multer({ storage });
 
-// 🔹 CRUD marshrutlari
+// 🔹 CRUD yo‘llar
 router.get("/", controller.getAll);
 
 router.post(
@@ -38,9 +42,5 @@ router.put(
 );
 
 router.delete("/:id", controller.remove);
-
-
-
-
 
 module.exports = router;

@@ -6,17 +6,17 @@ import GoalsSection from "./pages/GoalsSection";
 import SDGSection from "./pages/SDGSection";
 import Footer from "./components/Footer";
 import { LanguageProvider } from "./context/LanguageContext";
+
 import GoalDetail from "./pages/GoalDetail";
+import GoalList from "./pages/GoalList";
 
 function App() {
   return (
-    // 🌍 Butun ilovani LanguageProvider bilan o‘raymiz
     <LanguageProvider>
       <Router>
         {/* 🧭 Navbar har doim tepada */}
         <Navbar />
 
-        {/* 📍 Barcha sahifalar shu yerda yo‘naltiriladi */}
         <Routes>
           {/* 🏠 Bosh sahifa */}
           <Route
@@ -31,16 +31,11 @@ function App() {
             }
           />
 
-          {/* 🎯 Maqsad sahifasi (Kirish bosilganda ochiladi) */}
-          <Route
-            path="/goal/:id"
-            element={
-              <>
-                <GoalDetail />
-                
-              </>
-            }
-          />
+          {/* 🎯 Banner bosilganda shu bannerga tegishli sahifalar chiqadi */}
+          <Route path="/goal-detail/:id" element={<GoalDetail />} />
+
+          {/* 📋 Bitta sahifaning to‘liq ma’lumotlari */}
+          <Route path="/goal/:id" element={<GoalList />} />
         </Routes>
       </Router>
     </LanguageProvider>
