@@ -99,7 +99,7 @@ export default function GoalDetail() {
         />
       </Box>
 
-      {/* 📄 Sahifa kontenti */}
+      {/* 📄 Faqat Title va Banner Image */}
       <Container sx={{ my: 8 }}>
         {pages && pages.length > 0 ? (
           pages.map((page, index) => (
@@ -123,50 +123,36 @@ export default function GoalDetail() {
                 },
               }}
             >
-              {/* 🔹 Sarlavha */}
+              {/* 🔹 Sarlavha (justify bo‘ldi) */}
               <Typography
                 variant="h5"
                 sx={{
                   fontWeight: 700,
                   color: "#009f5d",
-                  mb: 2,
-                  textAlign: "center",
+                  mb: 3,
+                  textAlign: "justify", // 🔹 justify text alignment
+                  lineHeight: 1.5,
+                  fontSize: { xs: "1.1rem", md: "1.25rem" },
                 }}
               >
-                {page[`title_${lang}`]}
+                {page[`title_${lang}`]
+                  ? page[`title_${lang}`]
+                      .replace(/<[^>]*>/g, "")
+                      .replace(/&nbsp;/g, " ")
+                      .trim()
+                  : ""}
               </Typography>
 
-              {/* 🔹 Kontent — TinyMCE dan kelgan holatda to‘liq render */}
-              <Box
-                sx={{
-                  color: "#333",
-                  fontSize: "1rem",
-                  lineHeight: 1.8,
-                  mb: 2,
-                  "& p": { mb: 1.5 },
-                  "& img": {
-                    maxWidth: "100%",
-                    borderRadius: 2,
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                  },
-                  "& a": {
-                    color: "#009f5d",
-                    textDecoration: "underline",
-                    "&:hover": { color: "#006b40" },
-                  },
-                }}
-                dangerouslySetInnerHTML={{
-                  __html: page[`content_${lang}`] || "",
-                }}
-              />
-
-              {/* 🔹 Tegishli banner rasmlar */}
+              {/* 🔹 Faqat Banner Rasmlar (markazda qoladi) */}
               {Array.isArray(page.banner_ids) && page.banner_ids.length > 0 && (
                 <Stack
                   direction="row"
-                  justifyContent="center"
+                  justifyContent="left"
                   spacing={1.5}
-                  sx={{ flexWrap: "wrap", mt: 3 }}
+                  sx={{
+                    flexWrap: "wrap",
+                    mt: 1,
+                  }}
                 >
                   {page.banner_ids.map((bannerId) => {
                     const banner = banners.find((b) => b.id === bannerId);
@@ -176,7 +162,7 @@ export default function GoalDetail() {
                     return (
                       <motion.div
                         key={bannerId}
-                        whileHover={{ scale: 1.1 }}
+                        whileHover={{ scale: 1.08 }}
                         transition={{ type: "spring", stiffness: 200 }}
                       >
                         <Box
@@ -184,11 +170,12 @@ export default function GoalDetail() {
                           src={`${BASE_API_URL.replace("/api", "")}${imgSrc}`}
                           alt={banner[`title_${lang}`]}
                           sx={{
-                            width: 70,
-                            height: 70,
+                            width: 80,
+                            height: 80,
                             borderRadius: 2,
                             objectFit: "cover",
                             boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+                            mx: 0.5,
                           }}
                         />
                       </motion.div>
@@ -214,7 +201,7 @@ export default function GoalDetail() {
                 fontStyle: "italic",
               }}
             >
-              ❌ Ma’lumot to‘ldirilmoqda...
+              ❌ Ma’lumot topilmadi
             </Typography>
           </motion.div>
         )}

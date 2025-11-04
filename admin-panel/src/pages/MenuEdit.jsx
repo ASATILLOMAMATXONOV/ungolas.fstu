@@ -31,7 +31,7 @@ const MenuEdit = () => {
 
   const editorRefs = { uz: useRef(null), ru: useRef(null), en: useRef(null) };
 
-  // 🔹 Ma’lumotni olish
+  /* ----------------------- 🟢 Ma’lumotni olish ----------------------- */
   const fetchMenu = async () => {
     setLoading(true);
     try {
@@ -58,7 +58,7 @@ const MenuEdit = () => {
     fetchMenu();
   }, [id]);
 
-  // 🔹 Input o‘zgarish
+  /* ----------------------- ✏️ Input o‘zgarishlari ----------------------- */
   const handleChange = (lang, field, value) => {
     setMenuData((prev) => ({
       ...prev,
@@ -66,7 +66,7 @@ const MenuEdit = () => {
     }));
   };
 
-  // 🔹 Tahrirni saqlash
+  /* ----------------------- 💾 Yangilash (saqlash) ----------------------- */
   const handleUpdate = async () => {
     setLoading(true);
 
@@ -93,8 +93,6 @@ const MenuEdit = () => {
           message: "✅ Menu muvaffaqiyatli yangilandi!",
           type: "success",
         });
-
-        // 🟢 0.8 soniyadan so‘ng asosiy sahifaga qaytadi
         setTimeout(() => navigate("/menu"), 800);
       } else {
         setAlert({
@@ -114,13 +112,89 @@ const MenuEdit = () => {
     }
   };
 
+  /* ----------------------- ⚙️ TinyMCE sozlamalari ----------------------- */
+  const editorConfig = {
+    height: 400,
+    menubar: "file edit view insert format tools table help",
+    plugins: [
+      "advlist",
+      "autolink",
+      "lists",
+      "link",
+      "image",
+      "charmap",
+      "preview",
+      "anchor",
+      "searchreplace",
+      "visualblocks",
+      "code",
+      "fullscreen",
+      "insertdatetime",
+      "media",
+      "table",
+      "help",
+      "wordcount",
+      "emoticons",
+    ],
+    toolbar:
+      "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | " +
+      "alignleft aligncenter alignright alignjustify lineheight | bullist numlist outdent indent | " +
+      "link image media table | removeformat | code fullscreen preview help",
+
+    automatic_uploads: true,
+    file_picker_types: "image",
+    paste_data_images: true,
+
+    file_picker_callback: (cb) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+
+      input.onchange = async function () {
+        const file = this.files[0];
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const res = await fetch(`${BASE_API_URL}/upload`, {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+          cb(`${BASE_API_URL.replace("/api", "")}${data.location}`, {
+            title: file.name,
+          });
+        } catch (err) {
+          console.error("❌ Yuklashda xato:", err);
+        }
+      };
+
+      input.click();
+    },
+
+    content_style: `
+      body {
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #333;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+      }
+    `,
+  };
+
+  /* ----------------------- 🧩 JSX Rendering ----------------------- */
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5" fontWeight="bold" gutterBottom>
         ✏️ Menuni tahrirlash
       </Typography>
 
-      {/* --- TITLE INPUTS --- */}
+      {/* --- Sarlavhalar --- */}
       <Paper sx={{ p: 3, mb: 4 }} elevation={3}>
         <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
           Sarlavhalar
@@ -140,7 +214,7 @@ const MenuEdit = () => {
         </Stack>
       </Paper>
 
-      {/* --- CONTENT SWITCH --- */}
+      {/* --- Kontent mavjudligi belgisi --- */}
       <FormControlLabel
         control={
           <Switch
@@ -153,7 +227,7 @@ const MenuEdit = () => {
         sx={{ mb: 3 }}
       />
 
-      {/* --- CONTENT EDITORS --- */}
+      {/* --- Kontent tahrirchilari --- */}
       {hasContent && (
         <Paper sx={{ p: 3 }} elevation={3}>
           <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
@@ -170,80 +244,14 @@ const MenuEdit = () => {
                 >
                   Content ({lang.toUpperCase()})
                 </Typography>
+
                 <Editor
-                  onInit={(evt, editor) => (editorRefs[lang].current = editor)}
                   apiKey="oz1anr2rkjjim9zxiypl9te00gazqqq43epqosng505m0ddf"
                   value={menuData[lang].content}
-                  init={{
-                    height: 400,
-                    menubar: "file edit view insert format tools table help",
-                    plugins: [
-                      "advlist",
-                      "autolink",
-                      "lists",
-                      "link",
-                      "image",
-                      "charmap",
-                      "preview",
-                      "anchor",
-                      "searchreplace",
-                      "visualblocks",
-                      "code",
-                      "fullscreen",
-                      "insertdatetime",
-                      "media",
-                      "table",
-                      "help",
-                      "wordcount",
-                      "emoticons",
-                    ],
-                   toolbar:
-    "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | " +
-    "alignleft aligncenter alignright alignjustify lineheight | bullist numlist outdent indent | link image media table | " +
-    "removeformat | code fullscreen preview help",
-                    images_upload_url: `${BASE_API_URL}/upload`,
-                    automatic_uploads: true,
-                    file_picker_types: "image",
-                    file_picker_callback: (cb, value, meta) => {
-                    const input = document.createElement("input");
-                    input.setAttribute("type", "file");
-                    input.setAttribute("accept", "image/*");
-
-                    input.onchange = async function () {
-                        const file = this.files[0];
-                        const formData = new FormData();
-                        formData.append("file", file);
-
-                        try {
-                        const res = await fetch(`${BASE_API_URL}/upload`, {
-                            method: "POST",
-                            body: formData,
-                        });
-                        const data = await res.json();
-                        cb(`${BASE_API_URL.replace("/api", "")}${data.location}`, {
-                            title: file.name,
-                        });
-                        } catch (err) {
-                        console.error("❌ Yuklashda xato:", err);
-                        }
-                    };
-
-                    input.click();
-                    },
-                    content_style: `
-                    body { 
-                        font-family: Helvetica, Arial, sans-serif; 
-                        font-size: 16px; 
-                        line-height: 1.6; 
-                        color: #333; 
-                    }
-                    img { 
-                        max-width: 100%; 
-                        height: auto; 
-                        border-radius: 6px;
-                    }
-                    `,
-                }}
+                  init={editorConfig}
+                  onEditorChange={(content) =>
+                    handleChange(lang, "content", content)
+                  }
                 />
               </Box>
             ))}
@@ -251,10 +259,15 @@ const MenuEdit = () => {
         </Paper>
       )}
 
-      {/* --- SAVE BUTTON --- */}
-        <Box textAlign="right" mt={4} display="flex" justifyContent="right" gap={2} >
-
-     <Button
+      {/* --- Tugmalar --- */}
+      <Box
+        textAlign="right"
+        mt={4}
+        display="flex"
+        justifyContent="right"
+        gap={2}
+      >
+        <Button
           variant="outlined"
           color="error"
           onClick={() => navigate("/menu")}
@@ -280,7 +293,7 @@ const MenuEdit = () => {
         </Button>
       </Box>
 
-      {/* --- Snackbar (xabar) --- */}
+      {/* --- Snackbar --- */}
       <Snackbar
         open={alert.open}
         autoHideDuration={2000}

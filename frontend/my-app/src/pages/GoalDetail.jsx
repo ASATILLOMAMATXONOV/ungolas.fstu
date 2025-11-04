@@ -1,71 +1,34 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Container,
-  Paper,
-  Stack,
-} from "@mui/material";
+import { useParams } from "react-router-dom";
+import { Box, Typography, CircularProgress, Container } from "@mui/material";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useLanguage } from "../context/LanguageContext";
 import { BASE_API_URL } from "../config";
 import backgroundImage from "../assets/iStock-Boonyachoat1.jpg";
 
-export default function GoalDetail() {
+export default function GoalList() {
   const { id } = useParams();
   const { lang } = useLanguage();
-  const navigate = useNavigate();
-
-  const [pages, setPages] = useState([]);
-  const [banners, setBanners] = useState([]);
+  const [page, setPage] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
+    const fetchPage = async () => {
       try {
-        const [pagesRes, bannersRes] = await Promise.all([
-          fetch(`${BASE_API_URL}/pages`),
-          fetch(`${BASE_API_URL}/banners`),
-        ]);
-
-        const [pagesData, bannersData] = await Promise.all([
-          pagesRes.json(),
-          bannersRes.json(),
-        ]);
-
-        if (isMounted) {
-          // 🔹 Faqat shu banner_id ga tegishli sahifalarni olish
-          const filtered = Array.isArray(pagesData)
-            ? pagesData.filter((item) => String(item.banner_id) === String(id))
-            : [];
-
-          // 🔹 Takrorlanishni oldini olish
-          const uniquePages = filtered.filter(
-            (v, i, a) => a.findIndex((t) => t.id === v.id) === i
-          );
-
-          setPages(uniquePages);
-          setBanners(bannersData);
-        }
+        const res = await fetch(`${BASE_API_URL}/pages/${id}`);
+        const data = await res.json();
+        setPage(data);
       } catch (err) {
         console.error("❌ Ma’lumot olishda xato:", err);
       } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
     };
-
-    fetchData();
-    return () => {
-      isMounted = false;
-    };
+    fetchPage();
   }, [id]);
 
-  if (loading) {
+  if (loading)
     return (
       <Box
         sx={{
@@ -73,33 +36,37 @@ export default function GoalDetail() {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#f9faf9",
+          bgcolor: "#f9faf9",
         }}
       >
         <CircularProgress color="success" />
       </Box>
     );
-  }
+
+  if (!page)
+    return (
+      <Typography align="center" sx={{ mt: 10, color: "#777" }}>
+        ❌ Ma’lumot topilmadi
+      </Typography>
+    );
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-        bgcolor: "#f9faf9",
-      }}
-    >
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      {/* 🔹 Navbar */}
       <Navbar />
 
-      {/* 🏞️ Banner fon rasmi */}
+      {/* 🏞️ Statik banner */}
       <Box
         sx={{
           position: "relative",
-          height: { xs: "40vh", md: "50vh" },
+          height: { xs: "45vh", md: "55vh" },
           overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
+        {/* 🟩 Fon rasmi */}
         <Box
           component="img"
           src={backgroundImage}
@@ -108,103 +75,72 @@ export default function GoalDetail() {
             width: "100%",
             height: "100%",
             objectFit: "cover",
+            filter: "brightness(0.7)",
+            animation: "fadeIn 2s ease-out",
           }}
         />
-        <Box
+
+        {/* 🔹 Title */}
+        <Typography
+          variant="h4"
           sx={{
             position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            background:
-              "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.75) 100%)",
+            color: "#ffffff",
+            fontWeight: 700,
+            textAlign: "center",
+            px: 2,
+            maxWidth: "80%",
+            textShadow: "0 3px 10px rgba(0,0,0,0.6)",
           }}
-        />
+        >
+          {page[`title_${lang}`]
+            ?.replace(/<[^>]*>/g, "")
+            ?.replace(/&nbsp;/g, " ")
+            ?.trim()}
+        </Typography>
       </Box>
 
-      {/* 📋 Ma’lumotlar */}
-      <Container sx={{ my: 8 }}>
-        {pages && pages.length > 0 ? (
-          pages.map((page, index) => (
-            <Paper
-              key={page.id || index}
-              elevation={4}
-              // 🔹 bosilganda GoalList sahifasiga o‘tadi
-              onClick={() => navigate(`/goal-list/${page.id}`)}
-              sx={{
-                p: { xs: 3, md: 4 },
-                borderRadius: 3,
-                bgcolor: "#f6fff8",
-                maxWidth: "900px",
-                mx: "auto",
-                mb: 4,
-                textAlign: "center",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  boxShadow: "0 8px 25px rgba(0,161,82,0.25)",
-                  transform: "translateY(-5px)",
-                },
-              }}
-            >
-              {/* 🔹 Faqat Title */}
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  color: "#009f5d",
-                  mb: 2,
-                  wordBreak: "break-word",
-                }}
-              >
-                {page[`title_${lang}`]
-                  ? page[`title_${lang}`]
-                      .replace(/<[^>]*>/g, "") // HTML teglardan tozalaydi
-                      .replace(/&nbsp;/g, " ") // HTML probellarni olib tashlaydi
-                      .trim()
-                  : ""}
-              </Typography>
-
-              {/* 🔹 Faqat Banner Rasmlar */}
-              {Array.isArray(page.banner_ids) && page.banner_ids.length > 0 && (
-                <Stack
-                  direction="row"
-                  justifyContent="center"
-                  spacing={1.5}
-                  sx={{ flexWrap: "wrap", mt: 1 }}
-                >
-                  {page.banner_ids.map((bannerId) => {
-                    const banner = banners.find((b) => b.id === bannerId);
-                    if (!banner) return null;
-
-                    const imgSrc = banner[`image_${lang}`] || banner.image_uz;
-                    return (
-                      <Box
-                        key={bannerId}
-                        component="img"
-                        src={`${BASE_API_URL.replace("/api", "")}${imgSrc}`}
-                        alt={banner[`title_${lang}`]}
-                        sx={{
-                          width: 60,
-                          height: 60,
-                          borderRadius: 1.5,
-                          objectFit: "cover",
-                          transition: "0.3s",
-                          "&:hover": { transform: "scale(1.08)" },
-                        }}
-                      />
-                    );
-                  })}
-                </Stack>
-              )}
-            </Paper>
-          ))
-        ) : (
-          <Typography align="center" sx={{ color: "#777", mt: 10 }}>
-            ❌ Ma’lumot topilmadi
-          </Typography>
-        )}
+      {/* 📄 Content qismi */}
+      <Container sx={{ my: 8, maxWidth: "950px" }}>
+        <Box
+          sx={{
+            color: "#333",
+            fontSize: "1.05rem",
+            lineHeight: 1.8,
+            textAlign: "justify",
+            "& p": { mb: 2 },
+            "& ul": { pl: 3, mb: 2 },
+            "& li": { mb: 1 },
+            /* 🔹 IMG uchun animatsiyalar */
+            "& img": {
+              maxWidth: "100%",
+              borderRadius: 2,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              my: 2,
+              opacity: 0,
+              transform: "scale(0.98)",
+              animation: "fadeZoomIn 1.2s ease forwards",
+              transition: "transform 0.4s ease, box-shadow 0.3s ease",
+              "&:hover": {
+                transform: "scale(1.05)",
+                boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
+              },
+            },
+            "& a": {
+              color: "#007b4e",
+              textDecoration: "underline",
+              "&:hover": { color: "#004f2b" },
+            },
+            /* 🔹 Animatsiya kalitlari */
+            "@keyframes fadeZoomIn": {
+              "0%": { opacity: 0, transform: "scale(0.95)" },
+              "100%": { opacity: 1, transform: "scale(1)" },
+            },
+          }}
+          dangerouslySetInnerHTML={{
+            __html: page[`content_${lang}`] || "<p>No content available.</p>",
+          }}
+        />
       </Container>
 
       <Footer />

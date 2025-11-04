@@ -29,7 +29,7 @@ const PageCrud = () => {
   const [banners, setBanners] = useState([]);
   const [pageData, setPageData] = useState({
     banner_id: "",
-    banner_ids: [], // qo‘shimcha bannerlar uchun
+    banner_ids: [],
     title_uz: "",
     title_ru: "",
     title_en: "",
@@ -97,74 +97,121 @@ const PageCrud = () => {
   };
 
   // 💾 Saqlash funksiyasi
- const handleSave = async () => {
-  setLoading(true);
-  try {
-    const payload = {
-      ...pageData,
-      banner_ids: Array.isArray(pageData.banner_ids)
-        ? pageData.banner_ids
-        : [],
-    };
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        ...pageData,
+        banner_ids: Array.isArray(pageData.banner_ids)
+          ? pageData.banner_ids
+          : [],
+      };
 
-    const method = id ? "PUT" : "POST";
-    const url = id
-      ? `${BASE_API_URL}/pages/${id}`
-      : `${BASE_API_URL}/pages`;
+      const method = id ? "PUT" : "POST";
+      const url = id
+        ? `${BASE_API_URL}/pages/${id}`
+        : `${BASE_API_URL}/pages`;
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (res.ok) {
-      setAlert({
-        open: true,
-        message: id ? "✏️ Sahifa yangilandi!" : "✅ Yangi sahifa qo‘shildi!",
-        type: "success",
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      setTimeout(() => navigate("/pages"), 1200);
-    } else {
+
+      if (res.ok) {
+        setAlert({
+          open: true,
+          message: id ? "✏️ Sahifa yangilandi!" : "✅ Yangi sahifa qo‘shildi!",
+          type: "success",
+        });
+        setTimeout(() => navigate("/pages"), 1200);
+      } else {
+        setAlert({
+          open: true,
+          message: "❌ Saqlashda xatolik yuz berdi!",
+          type: "error",
+        });
+      }
+    } catch (err) {
       setAlert({
         open: true,
-        message: "❌ Saqlashda xatolik yuz berdi!",
+        message: "❌ Server bilan aloqa yo‘q: " + err.message,
         type: "error",
       });
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    setAlert({
-      open: true,
-      message: "❌ Server bilan aloqa yo‘q: " + err.message,
-      type: "error",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   // ⚙️ TinyMCE sozlamalari
-  const editorConfig = {
-    height: 500,
+  const getEditorConfig = (lang) => ({
+    height: 400,
     menubar: "file edit view insert format tools table help",
     plugins: [
-      "advlist autolink lists link image charmap preview anchor",
-      "searchreplace visualblocks code fullscreen",
-      "insertdatetime media table help wordcount emoticons",
+      "advlist",
+      "autolink",
+      "lists",
+      "link",
+      "image",
+      "charmap",
+      "preview",
+      "anchor",
+      "searchreplace",
+      "visualblocks",
+      "code",
+      "fullscreen",
+      "insertdatetime",
+      "media",
+      "table",
+      "help",
+      "wordcount",
+      "emoticons",
     ],
     toolbar:
       "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | " +
       "alignleft aligncenter alignright alignjustify lineheight | bullist numlist outdent indent | link image media table | " +
       "removeformat | code fullscreen preview help",
-    automatic_uploads: true,
     images_upload_url: `${BASE_API_URL}/upload`,
+    automatic_uploads: true,
     file_picker_types: "image",
+    file_picker_callback: (cb) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = async function () {
+        const file = this.files[0];
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const res = await fetch(`${BASE_API_URL}/upload`, {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+          cb(`${BASE_API_URL.replace("/api", "")}${data.location}`, {
+            title: file.name,
+          });
+        } catch (err) {
+          console.error("❌ Yuklashda xato:", err);
+        }
+      };
+      input.click();
+    },
     content_style: `
-      body { font-family: Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333; }
-      img { max-width: 100%; height: auto; border-radius: 6px; }
+      body {
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #333;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+      }
     `,
-  };
+  });
 
   return (
     <Box sx={{ p: 4 }}>
@@ -266,25 +313,20 @@ const PageCrud = () => {
                 {lang.toUpperCase()} matni
               </Typography>
               <Editor
+                onInit={(evt, editor) => (editorRefs[lang].current = editor)}
                 apiKey="oz1anr2rkjjim9zxiypl9te00gazqqq43epqosng505m0ddf"
                 value={pageData[`content_${lang}`]}
                 onEditorChange={(content) =>
                   handleChange(`content_${lang}`, content)
                 }
-                init={editorConfig}
+                init={getEditorConfig(lang)}
               />
             </Box>
           ))}
         </Stack>
 
         {/* --- Tugmalar --- */}
-        <Box
-          textAlign="right"
-          mt={4}
-          display="flex"
-          justifyContent="right"
-          gap={2}
-        >
+        <Box textAlign="right" mt={4} display="flex" justifyContent="right" gap={2}>
           <Button
             variant="outlined"
             color="error"
