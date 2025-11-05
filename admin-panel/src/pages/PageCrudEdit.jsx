@@ -26,9 +26,12 @@ const PageCrudEdit = () => {
 
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState({ open: false, message: "", type: "info" });
+
+  const [components, setComponents] = useState([]);
   const [banners, setBanners] = useState([]);
+
   const [pageData, setPageData] = useState({
-    banner_id: "",
+    component_id: "",
     banner_ids: [],
     title_uz: "",
     title_ru: "",
@@ -38,13 +41,20 @@ const PageCrudEdit = () => {
     content_en: "",
   });
 
-  const editorRefs = {
-    uz: useRef(null),
-    ru: useRef(null),
-    en: useRef(null),
+  const editorRefs = { uz: useRef(null), ru: useRef(null), en: useRef(null) };
+
+  // ✅ Componentlarni olish
+  const fetchComponents = async () => {
+    try {
+      const res = await fetch(`${BASE_API_URL}/components`);
+      const data = await res.json();
+      setComponents(data);
+    } catch (err) {
+      console.error("❌ Componentlarni olishda xato:", err);
+    }
   };
 
-  // 📥 Bannerlar ro‘yxatini olish
+  // ✅ Bannerlarni olish
   const fetchBanners = async () => {
     try {
       const res = await fetch(`${BASE_API_URL}/banners`);
@@ -55,13 +65,14 @@ const PageCrudEdit = () => {
     }
   };
 
-  // 📥 Sahifani ma’lumotini olish
+  // ✅ Sahifa ma'lumotini olish (tahrirlash)
   const fetchPage = async () => {
     try {
       const res = await fetch(`${BASE_API_URL}/pages/${id}`);
       const data = await res.json();
+
       setPageData({
-        banner_id: data.banner_id || "",
+        component_id: data.component_id || "",
         banner_ids: data.banner_ids || [],
         title_uz: data.title_uz || "",
         title_ru: data.title_ru || "",
@@ -76,26 +87,26 @@ const PageCrudEdit = () => {
   };
 
   useEffect(() => {
+    fetchComponents();
     fetchBanners();
     fetchPage();
   }, [id]);
 
-  // 🔹 Input o‘zgarishlari
+  // 🔹 Input o'zgarishi
   const handleChange = (field, value) => {
     setPageData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // 🔹 Checkbox boshqaruvi
+  // 🔹 Banner checkbox boshqaruvi
   const handleCheckboxChange = (bannerId) => {
     setPageData((prev) => {
       const selected = new Set(prev.banner_ids);
-      if (selected.has(bannerId)) selected.delete(bannerId);
-      else selected.add(bannerId);
+      selected.has(bannerId) ? selected.delete(bannerId) : selected.add(bannerId);
       return { ...prev, banner_ids: Array.from(selected) };
     });
   };
 
-  // 💾 Yangilash funksiyasi
+  // ✅ Yangilash
   const handleUpdate = async () => {
     setLoading(true);
     try {
@@ -111,18 +122,18 @@ const PageCrudEdit = () => {
           message: "✅ Sahifa muvaffaqiyatli yangilandi!",
           type: "success",
         });
-        setTimeout(() => navigate("/pages"), 1200);
+        setTimeout(() => navigate("/pages"), 1000);
       } else {
         setAlert({
           open: true,
-          message: "❌ Yangilashda xatolik yuz berdi!",
+          message: "❌ Yangilashda xato!",
           type: "error",
         });
       }
     } catch (err) {
       setAlert({
         open: true,
-        message: "❌ Server bilan aloqa yo‘q: " + err.message,
+        message: "❌ Server xatosi",
         type: "error",
       });
     } finally {
@@ -130,58 +141,17 @@ const PageCrudEdit = () => {
     }
   };
 
-  // ⚙️ TinyMCE sozlamalari
+  // TinyMCE sozlamalari
   const editorConfig = {
-    height: 500,
-    menubar: "file edit view insert format tools table help",
+    height: 450,
+    menubar: false,
     plugins: [
       "advlist autolink lists link image charmap preview anchor",
       "searchreplace visualblocks code fullscreen",
-      "insertdatetime media table help wordcount emoticons",
+      "insertdatetime media table help wordcount",
     ],
     toolbar:
-      "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | " +
-      "alignleft aligncenter alignright alignjustify lineheight | bullist numlist outdent indent | link image media table | " +
-      "removeformat | code fullscreen preview help",
-    automatic_uploads: true,
-    images_upload_url: `${BASE_API_URL}/upload`,
-    file_picker_types: "image",
-    file_picker_callback: (cb) => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.onchange = async function () {
-        const file = this.files[0];
-        const formData = new FormData();
-        formData.append("file", file);
-        try {
-          const res = await fetch(`${BASE_API_URL}/upload`, {
-            method: "POST",
-            body: formData,
-          });
-          const data = await res.json();
-          cb(`${BASE_API_URL.replace("/api", "")}${data.location}`, {
-            title: file.name,
-          });
-        } catch (err) {
-          console.error("❌ Yuklashda xato:", err);
-        }
-      };
-      input.click();
-    },
-    content_style: `
-      body { 
-        font-family: Helvetica, Arial, sans-serif; 
-        font-size: 16px; 
-        line-height: 1.6; 
-        color: #333; 
-      }
-      img { 
-        max-width: 100%; 
-        height: auto; 
-        border-radius: 6px;
-      }
-    `,
+      "undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image media | code",
   };
 
   return (
@@ -191,38 +161,34 @@ const PageCrudEdit = () => {
           ✏️ Sahifani tahrirlash
         </Typography>
 
-        {/* --- Banner tanlash --- */}
+        {/* ✅ COMPONENT tanlash (faqat bitta) */}
         <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel id="banner-select-label">Asosiy Banner</InputLabel>
+          <InputLabel id="component-select-label">Qaysi ma'lumotga tegishli</InputLabel>
           <Select
-            labelId="banner-select-label"
-            value={pageData.banner_id}
-            label="Asosiy Banner"
-            onChange={(e) => handleChange("banner_id", e.target.value)}
+            labelId="component-select-label"
+            value={pageData.component_id}
+            label="Qaysi ma'lumotga tegishli"
+            onChange={(e) => handleChange("component_id", e.target.value)}
           >
-            {banners.map((banner) => (
-              <MenuItem key={banner.id} value={banner.id}>
-                {banner.title_uz}
+            {components.map((comp) => (
+              <MenuItem key={comp.id} value={comp.id}>
+                ➤ {comp.title_uz}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
 
-        {/* --- Qo‘shimcha bannerlar --- */}
+        {/* ✅ Ko‘p banner checkboxlari */}
         <Typography variant="h6" mb={1}>
-          Qo‘shimcha bannerlar
+          Qaysi bannerlarda ko'rinsin?
         </Typography>
+
         <Stack
           direction="row"
           flexWrap="wrap"
           spacing={2}
           mb={3}
-          sx={{
-            border: "1px solid #e0e0e0",
-            borderRadius: 2,
-            p: 2,
-            bgcolor: "#fafafa",
-          }}
+          sx={{ border: "1px solid #ddd", borderRadius: 2, p: 2 }}
         >
           {banners.map((banner) => (
             <FormControlLabel
@@ -231,125 +197,136 @@ const PageCrudEdit = () => {
                 <Checkbox
                   checked={pageData.banner_ids.includes(banner.id)}
                   onChange={() => handleCheckboxChange(banner.id)}
-                  sx={{
-                    color: "#009f5d",
-                    "&.Mui-checked": { color: "#009f5d" },
-                    transform: "scale(1.2)",
-                  }}
+                  sx={{ color: "#009f5d", "&.Mui-checked": { color: "#009f5d" } }}
                 />
               }
-              label={
-                <Typography
-                  sx={{
-                    color: pageData.banner_ids.includes(banner.id)
-                      ? "#007a45"
-                      : "#333",
-                    fontWeight: pageData.banner_ids.includes(banner.id)
-                      ? 600
-                      : 400,
-                  }}
-                >
-                  {banner.title_uz}
-                </Typography>
-              }
+              label={banner.title_uz}
             />
           ))}
         </Stack>
 
-        {/* --- Sarlavhalar --- */}
+        {/* ✅ Sarlavha */}
         <Typography variant="h6" mb={1}>
           Sarlavhalar
         </Typography>
-        <Stack spacing={2} mb={3}>
-          {["uz", "ru", "en"].map((lang) => (
-            <TextField
-              key={lang}
-              label={`Sarlavha (${lang.toUpperCase()})`}
-              fullWidth
-              value={pageData[`title_${lang}`]}
-              onChange={(e) => handleChange(`title_${lang}`, e.target.value)}
-            />
-          ))}
-        </Stack>
+        {["uz", "ru", "en"].map((lang) => (
+          <TextField
+            key={lang}
+            label={`Sarlavha (${lang.toUpperCase()})`}
+            fullWidth
+            sx={{ mb: 2 }}
+            value={pageData[`title_${lang}`]}
+            onChange={(e) => handleChange(`title_${lang}`, e.target.value)}
+          />
+        ))}
 
-        {/* --- Kontentlar --- */}
-        <Typography variant="h6" mb={2}>
+        {/* ✅ Kontent TinyMCE */}
+        <Typography variant="h6" mt={3} mb={1}>
           Kontentlar
         </Typography>
-        <Stack spacing={3}>
-          {["uz", "ru", "en"].map((lang) => (
-            <Box key={lang}>
-              <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-                {lang.toUpperCase()} matni
-              </Typography>
-              <Editor
-                apiKey="oz1anr2rkjjim9zxiypl9te00gazqqq43epqosng505m0ddf"
-                value={pageData[`content_${lang}`]}
-                onEditorChange={(content) =>
-                  handleChange(`content_${lang}`, content)
-                }
-                init={editorConfig}
-              />
-            </Box>
-          ))}
-        </Stack>
 
-        {/* --- Tugmalar --- */}
-        <Box
-          textAlign="right"
-          mt={4}
-          display="flex"
-          justifyContent="right"
-          gap={2}
-        >
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => navigate("/pages")}
-            sx={{
-              borderRadius: 3,
-              px: 3,
-              py: 1.2,
-              fontWeight: "bold",
-              textTransform: "none",
-            }}
-          >
-            🔙 Bekor qilish
+      {["uz", "ru", "en"].map((lang) => (
+  <Box key={lang} sx={{ mb: 3 }}>
+    <Typography fontWeight="bold" mb={1}>
+      {lang.toUpperCase()}
+    </Typography>
+
+    <Editor
+      onInit={(evt, editor) => (editorRefs[lang].current = editor)}
+      apiKey="oz1anr2rkjjim9zxiypl9te00gazqqq43epqosng505m0ddf"
+      value={pageData[`content_${lang}`]}    // ✅ TO‘G‘RI QILINDI
+      onEditorChange={(newValue) => handleChange(`content_${lang}`, newValue)} // ✅ SAQLASH UCHUN
+      init={{
+        height: 400,
+        menubar: "file edit view insert format tools table help",
+     plugins: [
+                        "advlist",
+                        "autolink",
+                        "lists",
+                        "link",
+                        "image",
+                        "charmap",
+                        "preview",
+                        "anchor",
+                        "searchreplace",
+                        "visualblocks",
+                        "code",
+                        "fullscreen",
+                        "insertdatetime",
+                        "media",
+                        "table",
+                        "help",
+                        "wordcount",
+                        "emoticons",
+                      ],
+        toolbar:
+          "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | " +
+          "alignleft aligncenter alignright alignjustify lineheight | bullist numlist outdent indent | link image media table | " +
+          "removeformat | code fullscreen preview help",
+        images_upload_url: `${BASE_API_URL}/upload`,
+        automatic_uploads: true,
+        file_picker_types: "image",
+        file_picker_callback: (cb, value, meta) => {
+          const input = document.createElement("input");
+          input.setAttribute("type", "file");
+          input.setAttribute("accept", "image/*");
+
+          input.onchange = async function () {
+            const file = this.files[0];
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+              const res = await fetch(`${BASE_API_URL}/upload`, {
+                method: "POST",
+                body: formData,
+              });
+              const data = await res.json();
+
+              cb(`${BASE_API_URL.replace("/api", "")}${data.location}`, {
+                title: file.name,
+              });
+            } catch (err) {
+              console.error("❌ Yuklashda xato:", err);
+            }
+          };
+
+          input.click();
+        },
+
+        content_style: `
+          body { font-family: Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333; }
+          img { max-width: 100%; height: auto; border-radius: 6px; }
+        `,
+      }}
+    />
+  </Box>
+))}
+
+
+        {/* ✅ Tugmalar */}
+        <Box display="flex" justifyContent="right" gap={2} mt={3}>
+          <Button variant="outlined" color="error" onClick={() => navigate("/pages")}>
+            Bekor qilish
           </Button>
-
           <Button
             variant="contained"
-            color="primary"
             startIcon={<Save />}
             onClick={handleUpdate}
             disabled={loading}
-            sx={{
-              textTransform: "none",
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              fontWeight: "bold",
-            }}
           >
-            {loading ? "⏳ Yangilanmoqda..." : "Saqlash"}
+            {loading ? "⏳ Saqlanmoqda..." : "Saqlash"}
           </Button>
         </Box>
       </Paper>
 
-      {/* --- Snackbar --- */}
+      {/* Alert Snackbar */}
       <Snackbar
         open={alert.open}
-        autoHideDuration={2500}
+        autoHideDuration={2300}
         onClose={() => setAlert({ ...alert, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert
-          onClose={() => setAlert({ ...alert, open: false })}
-          severity={alert.type}
-          variant="filled"
-        >
-          {alert.message}
-        </Alert>
+        <Alert severity={alert.type}>{alert.message}</Alert>
       </Snackbar>
     </Box>
   );

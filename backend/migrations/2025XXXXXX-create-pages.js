@@ -9,25 +9,30 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      banner_id: {
+
+      component_id: {
         type: Sequelize.INTEGER,
+        allowNull: true,
         references: {
-          model: "Banners",
+          model: "Components",
           key: "id",
         },
         onUpdate: "CASCADE",
         onDelete: "SET NULL",
       },
+
       banner_ids: {
         type: Sequelize.ARRAY(Sequelize.INTEGER),
         allowNull: true,
       },
-      title_uz: { type: Sequelize.TEXT },
-      title_ru: { type: Sequelize.TEXT },
-      title_en: { type: Sequelize.TEXT },
-      content_uz: { type: Sequelize.TEXT },
-      content_ru: { type: Sequelize.TEXT },
-      content_en: { type: Sequelize.TEXT },
+
+      title_uz: Sequelize.TEXT,
+      title_ru: Sequelize.TEXT,
+      title_en: Sequelize.TEXT,
+      content_uz: Sequelize.TEXT,
+      content_ru: Sequelize.TEXT,
+      content_en: Sequelize.TEXT,
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -41,7 +46,7 @@ module.exports = {
     });
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.dropTable("Pages");
   },
 };

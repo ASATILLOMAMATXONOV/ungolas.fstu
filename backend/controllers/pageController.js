@@ -1,30 +1,30 @@
-const { Page, Banner } = require("../models");
-const { Op } = require("sequelize");
+const { Page, Component, Banner } = require("../models");
 
-// ✅ Barcha sahifalarni olish
+// ✅ Barcha sahifalar
 exports.getAllPages = async (req, res) => {
   try {
     const pages = await Page.findAll({
-      include: [{ model: Banner, as: "banner", attributes: ["id", "title_uz"] }],
+      include: [
+        {
+          model: Component,
+          as: "component",
+          attributes: ["id", "title_uz", "banner_id"],
+        },
+      ],
       order: [["id", "DESC"]],
     });
 
-    
-
-    // Banner nomlarini olish
+    // banner titles qo‘shish
     const allBanners = await Banner.findAll({
       attributes: ["id", "title_uz"],
     });
 
-    const result = pages.map((page) => {
-      const bannerTitles = (page.banner_ids || [])
-        .map((id) => {
-          const found = allBanners.find((b) => b.id === id);
-          return found ? found.title_uz : null;
-        })
-        .filter(Boolean);
-      return { ...page.toJSON(), banner_titles: bannerTitles };
-    });
+    const result = pages.map((page) => ({
+      ...page.toJSON(),
+      banner_titles: (page.banner_ids || [])
+        .map((id) => allBanners.find((b) => b.id === id)?.title_uz)
+        .filter(Boolean),
+    }));
 
     res.json(result);
   } catch (error) {
@@ -33,47 +33,39 @@ exports.getAllPages = async (req, res) => {
   }
 };
 
-// ✅ Bitta sahifani olish
+// ✅ Bitta sahifa
 exports.getPageById = async (req, res) => {
   try {
     const page = await Page.findByPk(req.params.id, {
-      include: [{ model: Banner, as: "banner", attributes: ["id", "title_uz"] }],
+      include: [
+        {
+          model: Component,
+          as: "component",
+          attributes: ["id", "title_uz", "banner_id"],
+        },
+      ],
     });
+
     if (!page) return res.status(404).json({ error: "Sahifa topilmadi" });
 
-    // Qo‘shimcha banner nomlarini topamiz
     const allBanners = await Banner.findAll({ attributes: ["id", "title_uz"] });
-    const bannerTitles = (page.banner_ids || [])
-      .map((id) => {
-        const found = allBanners.find((b) => b.id === id);
-        return found ? found.title_uz : null;
-      })
-      .filter(Boolean);
 
-    res.json({ ...page.toJSON(), banner_titles: bannerTitles });
+    res.json({
+      ...page.toJSON(),
+      banner_titles: (page.banner_ids || [])
+        .map((id) => allBanners.find((b) => b.id === id)?.title_uz)
+        .filter(Boolean),
+    });
   } catch (error) {
     console.error("❌ Sahifani olishda xato:", error);
     res.status(500).json({ error: "Server xatosi" });
   }
 };
 
-// ✅ Yangi sahifa yaratish
+// ✅ Create
 exports.createPage = async (req, res) => {
   try {
-    let { banner_ids, ...data } = req.body;
-
-    // String sifatida kelsa JSON parse qilamiz
-    if (typeof banner_ids === "string") {
-      try {
-        banner_ids = JSON.parse(banner_ids);
-      } catch {
-        banner_ids = [];
-      }
-    }
-
-    if (!Array.isArray(banner_ids)) banner_ids = [];
-
-    const page = await Page.create({ ...data, banner_ids });
+    const page = await Page.create(req.body);
     res.status(201).json(page);
   } catch (error) {
     console.error("❌ Sahifa yaratishda xato:", error);
@@ -81,41 +73,24 @@ exports.createPage = async (req, res) => {
   }
 };
 
-// ✅ Sahifani yangilash
+// ✅ Update
 exports.updatePage = async (req, res) => {
   try {
-    const page = await Page.findByPk(req.params.id);
-    if (!page) return res.status(404).json({ error: "Sahifa topilmadi" });
-
-    let { banner_ids, ...data } = req.body;
-    if (typeof banner_ids === "string") {
-      try {
-        banner_ids = JSON.parse(banner_ids);
-      } catch {
-        banner_ids = [];
-      }
-    }
-
-    if (!Array.isArray(banner_ids)) banner_ids = [];
-
-    await page.update({ ...data, banner_ids });
-    res.json(page);
+    await Page.update(req.body, { where: { id: req.params.id } });
+    res.json({ message: "Sahifa yangilandi" });
   } catch (error) {
-    console.error("❌ Sahifani yangilashda xato:", error);
+    console.error("❌ Yangilashda xato:", error);
     res.status(500).json({ error: "Yangilashda xato" });
   }
 };
 
-// ✅ Sahifani o‘chirish
+// ✅ Delete
 exports.deletePage = async (req, res) => {
   try {
-    const page = await Page.findByPk(req.params.id);
-    if (!page) return res.status(404).json({ error: "Sahifa topilmadi" });
-
-    await page.destroy();
-    res.json({ message: "🗑 Sahifa o‘chirildi" });
+    await Page.destroy({ where: { id: req.params.id } });
+    res.json({ message: "🗑 O'chirildi" });
   } catch (error) {
-    console.error("❌ Sahifani o‘chirishda xato:", error);
-    res.status(500).json({ error: "O‘chirishda xato" });
+    console.error("❌ O'chirishda xato:", error);
+    res.status(500).json({ error: "O'chirishda xato" });
   }
 };

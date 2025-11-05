@@ -35,7 +35,7 @@ const Sidebar = () => {
 
      { name: "SDG IMG", path: "/HomeBannerCrud", icon: <TableProperties size={22} /> },
 
-
+     { name: "SDG Title", path: "/Components", icon: <Book size={22} /> },
 
      { name: "Pages", path: "/Pages", icon: <Book size={22} /> },
     

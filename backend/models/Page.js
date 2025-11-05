@@ -4,9 +4,9 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Page extends Model {
     static associate(models) {
-      this.belongsTo(models.Banner, {
-        foreignKey: "banner_id",
-        as: "banner",
+      this.belongsTo(models.Component, {
+        foreignKey: "component_id",
+        as: "component",
         onDelete: "SET NULL",
       });
     }
@@ -14,17 +14,14 @@ module.exports = (sequelize, DataTypes) => {
 
   Page.init(
     {
-      banner_id: {
+      component_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        references: {
-          model: "Banners",
-          key: "id",
-        },
       },
       banner_ids: {
         type: DataTypes.ARRAY(DataTypes.INTEGER),
         allowNull: true,
+        defaultValue: [],
       },
       title_uz: DataTypes.TEXT,
       title_ru: DataTypes.TEXT,

@@ -27,6 +27,12 @@ const PageCrud = () => {
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState({ open: false, message: "", type: "info" });
   const [banners, setBanners] = useState([]);
+  const [components, setComponents] = useState([]); // ✅ Yangi qo‘shildi
+const [openBanner, setOpenBanner] = useState(null);
+const [openSelect, setOpenSelect] = useState(false);
+
+
+
   const [pageData, setPageData] = useState({
     banner_id: "",
     banner_ids: [],
@@ -44,7 +50,7 @@ const PageCrud = () => {
     en: useRef(null),
   };
 
-  // 📥 Bannerlarni olish
+  // ✅ Bannerlarni olish
   const fetchBanners = async () => {
     try {
       const res = await fetch(`${BASE_API_URL}/banners`);
@@ -55,7 +61,18 @@ const PageCrud = () => {
     }
   };
 
-  // 📥 Tahrirlash uchun sahifa ma’lumotlari
+  // ✅ COMPONENTLARNI O‘QISH (MUHIM)
+  const fetchComponents = async () => {
+    try {
+      const res = await fetch(`${BASE_API_URL}/components`);
+      const data = await res.json();
+      setComponents(data); // ✅
+    } catch (err) {
+      console.error("❌ Componentlarni olishda xato:", err);
+    }
+  };
+
+  // ✅ Sahifa ma’lumotlari (edit mode)
   const fetchPage = async () => {
     if (!id) return;
     try {
@@ -78,39 +95,23 @@ const PageCrud = () => {
 
   useEffect(() => {
     fetchBanners();
+    fetchComponents(); // ✅ Qo‘shildi
     fetchPage();
   }, [id]);
 
-  // 🔄 Input o‘zgarishlari
+  // ✅ Input o‘zgarishi
   const handleChange = (field, value) => {
     setPageData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // ✅ Checkboxlarni boshqarish
-  const handleCheckboxChange = (bannerId) => {
-    setPageData((prev) => {
-      const selected = new Set(prev.banner_ids);
-      if (selected.has(bannerId)) selected.delete(bannerId);
-      else selected.add(bannerId);
-      return { ...prev, banner_ids: Array.from(selected) };
-    });
-  };
-
-  // 💾 Saqlash funksiyasi
+  // ✅ Saqlash
   const handleSave = async () => {
     setLoading(true);
     try {
-      const payload = {
-        ...pageData,
-        banner_ids: Array.isArray(pageData.banner_ids)
-          ? pageData.banner_ids
-          : [],
-      };
+      const payload = { ...pageData };
 
       const method = id ? "PUT" : "POST";
-      const url = id
-        ? `${BASE_API_URL}/pages/${id}`
-        : `${BASE_API_URL}/pages`;
+      const url = id ? `${BASE_API_URL}/pages/${id}` : `${BASE_API_URL}/pages`;
 
       const res = await fetch(url, {
         method,
@@ -125,93 +126,13 @@ const PageCrud = () => {
           type: "success",
         });
         setTimeout(() => navigate("/pages"), 1200);
-      } else {
-        setAlert({
-          open: true,
-          message: "❌ Saqlashda xatolik yuz berdi!",
-          type: "error",
-        });
       }
     } catch (err) {
-      setAlert({
-        open: true,
-        message: "❌ Server bilan aloqa yo‘q: " + err.message,
-        type: "error",
-      });
+      setAlert({ open: true, message: "❌ Saqlashda xato!", type: "error" });
     } finally {
       setLoading(false);
     }
   };
-
-  // ⚙️ TinyMCE sozlamalari
-  const getEditorConfig = (lang) => ({
-    height: 400,
-    menubar: "file edit view insert format tools table help",
-    plugins: [
-      "advlist",
-      "autolink",
-      "lists",
-      "link",
-      "image",
-      "charmap",
-      "preview",
-      "anchor",
-      "searchreplace",
-      "visualblocks",
-      "code",
-      "fullscreen",
-      "insertdatetime",
-      "media",
-      "table",
-      "help",
-      "wordcount",
-      "emoticons",
-    ],
-    toolbar:
-      "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | " +
-      "alignleft aligncenter alignright alignjustify lineheight | bullist numlist outdent indent | link image media table | " +
-      "removeformat | code fullscreen preview help",
-    images_upload_url: `${BASE_API_URL}/upload`,
-    automatic_uploads: true,
-    file_picker_types: "image",
-    file_picker_callback: (cb) => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.onchange = async function () {
-        const file = this.files[0];
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-          const res = await fetch(`${BASE_API_URL}/upload`, {
-            method: "POST",
-            body: formData,
-          });
-          const data = await res.json();
-          cb(`${BASE_API_URL.replace("/api", "")}${data.location}`, {
-            title: file.name,
-          });
-        } catch (err) {
-          console.error("❌ Yuklashda xato:", err);
-        }
-      };
-      input.click();
-    },
-    content_style: `
-      body {
-        font-family: Helvetica, Arial, sans-serif;
-        font-size: 16px;
-        line-height: 1.6;
-        color: #333;
-      }
-      img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 6px;
-      }
-    `,
-  });
 
   return (
     <Box sx={{ p: 4 }}>
@@ -220,27 +141,72 @@ const PageCrud = () => {
           {id ? "✏️ Sahifani tahrirlash" : "➕ Yangi sahifa qo‘shish"}
         </Typography>
 
-        {/* --- Banner tanlash --- */}
-        <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel id="banner-select-label">Qaysi Banner uchun</InputLabel>
-          <Select
-            labelId="banner-select-label"
-            value={pageData.banner_id}
-            label="Qaysi Banner uchun"
-            onChange={(e) => handleChange("banner_id", e.target.value)}
-          >
-            {banners.map((banner) => (
-              <MenuItem key={banner.id} value={banner.id}>
-                {banner.title_uz}
+        {/* ✅ SHU YER TO‘LIQ O‘ZGARDI */}
+<FormControl fullWidth sx={{ mb: 3 }}>
+  <InputLabel id="component-select-label">SDG bo‘yicha tanlang</InputLabel>
+
+  <Select
+    labelId="component-select-label"
+    open={openSelect}
+    onOpen={() => setOpenSelect(true)}
+    onClose={() => setOpenSelect(false)}
+    value={pageData.component_id || ""}
+    label="SDG bo‘yicha tanlang"
+    renderValue={(selected) => {
+      const selectedComponent = components.find((c) => c.id === selected);
+      return selectedComponent ? selectedComponent.title_uz : "Tanlang";
+    }}
+  >
+    {banners.map((banner) => (
+      <div key={banner.id}>
+        {/* Banner nomi */}
+        <MenuItem
+          onClick={() =>
+            setOpenBanner(openBanner === banner.id ? null : banner.id)
+          }
+          sx={{
+            fontWeight: "bold",
+            color: "#009f5d",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          {banner.title_uz}
+          {openBanner === banner.id ? "▲" : "▼"}
+        </MenuItem>
+
+        {/* Componentlar */}
+        <Box sx={{ pl: 3 }}>
+          {components
+            .filter((c) => c.banner_id === banner.id)
+            .map((c) => (
+              <MenuItem
+                key={c.id}
+                value={c.id}
+                onClick={() => {
+                  handleChange("component_id", c.id);
+                  setOpenSelect(false); // ✅ TANLAGANDA DROPDOWN YOPILADI
+                }}
+                sx={{
+                  ml: 2,
+                  color: pageData.component_id === c.id ? "#00663b" : "#222",
+                  fontWeight: pageData.component_id === c.id ? 700 : 400,
+                }}
+              >
+                ➤ {c.title_uz}
               </MenuItem>
             ))}
-          </Select>
-        </FormControl>
+        </Box>
+      </div>
+    ))}
+  </Select>
+</FormControl>
+
+
+        {/* ✅ O'zgargan qismi tugadi */}
 
         {/* --- Sarlavhalar --- */}
-        <Typography variant="h6" mb={1}>
-          Sarlavhalar
-        </Typography>
+        <Typography variant="h6" mb={1}>Sarlavhalar</Typography>
         <Stack spacing={2} mb={3}>
           {["uz", "ru", "en"].map((lang) => (
             <TextField
@@ -253,128 +219,112 @@ const PageCrud = () => {
           ))}
         </Stack>
 
-        {/* --- Qo‘shimcha bannerlar --- */}
-        <Typography variant="h6" mb={1}>
-          Qo‘shimcha bannerlar
-        </Typography>
-        <Stack
-          direction="row"
-          flexWrap="wrap"
-          spacing={2}
-          mb={3}
-          sx={{
-            border: "1px solid #e0e0e0",
-            borderRadius: 2,
-            p: 2,
-            bgcolor: "#fafafa",
-          }}
-        >
-          {banners.map((banner) => (
-            <FormControlLabel
-              key={banner.id}
-              control={
-                <Checkbox
-                  checked={pageData.banner_ids.includes(banner.id)}
-                  onChange={() => handleCheckboxChange(banner.id)}
-                  sx={{
-                    color: "#009f5d",
-                    "&.Mui-checked": { color: "#009f5d" },
-                    transform: "scale(1.2)",
-                  }}
-                />
-              }
-              label={
-                <Typography
-                  sx={{
-                    color: pageData.banner_ids.includes(banner.id)
-                      ? "#007a45"
-                      : "#333",
-                    fontWeight: pageData.banner_ids.includes(banner.id)
-                      ? 600
-                      : 400,
-                    transition: "0.3s",
-                  }}
-                >
-                  {banner.title_uz}
-                </Typography>
-              }
-            />
-          ))}
-        </Stack>
-
         {/* --- Kontentlar --- */}
-        <Typography variant="h6" mb={2}>
-          Kontentlar
-        </Typography>
+        <Typography variant="h6" mb={2}>Kontentlar</Typography>
         <Stack spacing={3}>
-          {["uz", "ru", "en"].map((lang) => (
-            <Box key={lang}>
-              <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-                {lang.toUpperCase()} matni
-              </Typography>
-              <Editor
-                onInit={(evt, editor) => (editorRefs[lang].current = editor)}
-                apiKey="oz1anr2rkjjim9zxiypl9te00gazqqq43epqosng505m0ddf"
-                value={pageData[`content_${lang}`]}
-                onEditorChange={(content) =>
-                  handleChange(`content_${lang}`, content)
-                }
-                init={getEditorConfig(lang)}
-              />
-            </Box>
-          ))}
+        {["uz", "ru", "en"].map((lang) => (
+  <Box key={lang} sx={{ mb: 3 }}>
+    <Typography fontWeight="bold" mb={1}>
+      {lang.toUpperCase()}
+    </Typography>
+
+    <Editor
+      onInit={(evt, editor) => (editorRefs[lang].current = editor)}
+      apiKey="oz1anr2rkjjim9zxiypl9te00gazqqq43epqosng505m0ddf"
+      value={pageData[`content_${lang}`]}    // ✅ TO‘G‘RI QILINDI
+      onEditorChange={(newValue) => handleChange(`content_${lang}`, newValue)} // ✅ SAQLASH UCHUN
+      init={{
+        height: 400,
+        menubar: "file edit view insert format tools table help",
+      plugins: [
+                        "advlist",
+                        "autolink",
+                        "lists",
+                        "link",
+                        "image",
+                        "charmap",
+                        "preview",
+                        "anchor",
+                        "searchreplace",
+                        "visualblocks",
+                        "code",
+                        "fullscreen",
+                        "insertdatetime",
+                        "media",
+                        "table",
+                        "help",
+                        "wordcount",
+                        "emoticons",
+                      ],
+        toolbar:
+          "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | " +
+          "alignleft aligncenter alignright alignjustify lineheight | bullist numlist outdent indent | link image media table | " +
+          "removeformat | code fullscreen preview help",
+        images_upload_url: `${BASE_API_URL}/upload`,
+        automatic_uploads: true,
+        file_picker_types: "image",
+        file_picker_callback: (cb, value, meta) => {
+          const input = document.createElement("input");
+          input.setAttribute("type", "file");
+          input.setAttribute("accept", "image/*");
+
+          input.onchange = async function () {
+            const file = this.files[0];
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+              const res = await fetch(`${BASE_API_URL}/upload`, {
+                method: "POST",
+                body: formData,
+              });
+              const data = await res.json();
+
+              cb(`${BASE_API_URL.replace("/api", "")}${data.location}`, {
+                title: file.name,
+              });
+            } catch (err) {
+              console.error("❌ Yuklashda xato:", err);
+            }
+          };
+
+          input.click();
+        },
+
+        content_style: `
+          body { font-family: Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333; }
+          img { max-width: 100%; height: auto; border-radius: 6px; }
+        `,
+      }}
+    />
+  </Box>
+))}
+
         </Stack>
 
-        {/* --- Tugmalar --- */}
-        <Box textAlign="right" mt={4} display="flex" justifyContent="right" gap={2}>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => navigate("/pages")}
-            sx={{
-              borderRadius: 3,
-              px: 3,
-              py: 1.2,
-              fontWeight: "bold",
-              textTransform: "none",
-            }}
-          >
-            🔙 Bekor qilish
+        {/* --- Saqlash tugmasi --- */}
+        <Box textAlign="right" mt={4}>
+          <Button variant="outlined" color="error" onClick={() => navigate("/pages")}>
+            Bekor qilish
           </Button>
-
           <Button
             variant="contained"
-            color="primary"
             startIcon={<Save />}
             onClick={handleSave}
             disabled={loading}
-            sx={{
-              textTransform: "none",
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              fontWeight: "bold",
-            }}
+            sx={{ ml: 2 }}
           >
             {loading ? "⏳ Saqlanmoqda..." : "Saqlash"}
           </Button>
         </Box>
       </Paper>
 
-      {/* --- Snackbar --- */}
       <Snackbar
         open={alert.open}
         autoHideDuration={2500}
         onClose={() => setAlert({ ...alert, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert
-          onClose={() => setAlert({ ...alert, open: false })}
-          severity={alert.type}
-          variant="filled"
-        >
-          {alert.message}
-        </Alert>
+        <Alert severity={alert.type}>{alert.message}</Alert>
       </Snackbar>
     </Box>
   );

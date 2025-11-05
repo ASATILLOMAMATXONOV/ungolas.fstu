@@ -18,6 +18,8 @@ import HomeBannerCrud from "./pages/HomeBannerCrud";
 import Pages from "./pages/Pages";
 import PageCrud from "./pages/PageCrud";
 import PageCrudEdit from "./pages/PageCrudEdit";
+import ComponentCrud from "./pages/ComponentCrud";
+import ComponentsPage from "./pages/Components";
 
 
 
@@ -55,6 +57,11 @@ function App() {
         <Route path="Pages" element={<Pages />} />
         <Route path="PageCrud" element={<PageCrud />} />
         <Route path="/pages/edit/:id" element={<PageCrudEdit />} />
+        
+
+        <Route path="/components" element={<ComponentsPage />} />
+        <Route path="/components/create" element={<ComponentCrud />} />
+        <Route path="/components/edit/:id" element={<ComponentCrud />} />
 
        
         

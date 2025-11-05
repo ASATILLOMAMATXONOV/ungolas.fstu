@@ -7,25 +7,32 @@ import { useLanguage } from "../context/LanguageContext";
 import { BASE_API_URL } from "../config";
 import backgroundImage from "../assets/iStock-Boonyachoat1.jpg";
 
-export default function GoalList() {
+export default function GoalDetail() {
   const { id } = useParams();
   const { lang } = useLanguage();
   const [page, setPage] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+useEffect(() => {
     const fetchPage = async () => {
       try {
-        const res = await fetch(`${BASE_API_URL}/pages/${id}`);
+        // ✅ Pages jadvalidagi barcha ma’lumotlarni olish
+        const res = await fetch(`${BASE_API_URL}/pages`);
         const data = await res.json();
-        setPage(data);
+
+        // ✅ component_id bo‘yicha qidirish
+        const found = data.find(
+          (item) => Number(item.component_id) === Number(id)
+        );
+
+        setPage(found || null);
       } catch (err) {
         console.error("❌ Ma’lumot olishda xato:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchPage();
+        fetchPage();
   }, [id]);
 
   if (loading)
