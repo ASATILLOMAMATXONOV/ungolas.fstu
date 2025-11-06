@@ -1,10 +1,14 @@
 {
   "development": {
-    "username": "postgres",
-    "password": "1973",
-    "database": "postgres",
-    "host": "localhost",
-    "dialect": "postgres"
+    "username": "ungoals",
+    "password": "Ungoals2025",
+    "database": "ungoals",
+    "host": "192.168.10.118",
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": false
+    },
+    "logging": false
   },
   "test": {
     "username": "root",

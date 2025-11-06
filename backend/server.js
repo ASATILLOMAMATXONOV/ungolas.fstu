@@ -12,6 +12,10 @@ const bannerRoutes = require("./routes/bannerRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const pageRoutes = require("./routes/pageRoutes");
 const componentRoutes = require("./routes/componentRoutes");
+const authRoutes = require("./routes/auth");
+
+
+const newPageRoutes = require("./routes/newPageRoutes");
 const app = express();
 
 // 📁 uploads papkasini avtomatik yaratish
@@ -37,7 +41,9 @@ app.use("/api/home-titles", homeTitleRoutes); // ✅ To‘g‘ri yo‘l
 app.use("/api/banners", bannerRoutes);    // Bannerlar uchun
 app.use("/api/pages", pageRoutes);        // Sahifalar uchun
 app.use("/api/components", componentRoutes); // Komponentlar uchun
+app.use("/api/new-pages", newPageRoutes); // Yangi sahifalar uchun
 
+app.use("/api/auth", authRoutes);          // Auth uchun
 
 // 🔹 DB bilan sinxronizatsiya
 sequelize.sync({ alter: true }).then(() => {
