@@ -27,6 +27,7 @@ useEffect(() => {
 
         setPage(found || null);
       } catch (err) {
+        
         console.error("❌ Ma’lumot olishda xato:", err);
       } finally {
         setLoading(false);

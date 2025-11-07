@@ -38,6 +38,8 @@ const Sidebar = () => {
      { name: "SDG Title", path: "/Components", icon: <Book size={22} /> },
 
      { name: "Pages", path: "/Pages", icon: <Book size={22} /> },
+
+    { name: "New Pages", path: "/new-pages", icon: <Book size={22} /> },
     
 
 

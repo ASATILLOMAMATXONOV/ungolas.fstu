@@ -12,6 +12,8 @@ import MenuDetail from "./components/MenuDetail";
 import GoalDetail from "./pages/GoalDetail";
 import GoalList from "./pages/GoalList";
 
+import NewPageView from "./pages/NewPageView";
+
 function App() {
   return (
     <LanguageProvider>
@@ -44,6 +46,9 @@ function App() {
 
           {/* 📂 Menu to‘liq ma’lumotlari */}
           <Route path="/menu/:id" element={<MenuDetail />} /> 
+
+          {/* 🆕 Yangi sahifa ko‘rish */}
+          <Route path="/new-pages/:id" element={<NewPageView />} />
 
 
 

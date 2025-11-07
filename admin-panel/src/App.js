@@ -22,8 +22,10 @@ import ComponentCrud from "./pages/ComponentCrud";
 import ComponentsPage from "./pages/Components";
 
 
-
-
+import NewPageList from "./pages/NewPageList";
+import NewPageCreate from "./pages/NewPageCreate";
+import NewPageEdit from "./pages/NewPageEdit";
+import Login from "./Login";
 
 
 
@@ -35,6 +37,10 @@ function App() {
     const token = localStorage.getItem("token");
     setLoggedIn(!!token);
   }, []);
+
+  if (!loggedIn) {
+    return <Login onLogin={() => setLoggedIn(true)} />;
+  }
 
   return (
     <Routes>
@@ -65,7 +71,12 @@ function App() {
 
        
         
-  
+        <Route path="new-pages" element={<NewPageList />} />
+        <Route path="new-pages/create" element={<NewPageCreate />} />
+        <Route path="new-pages/edit/:id" element={<NewPageEdit />} />
+
+        
+    <Route path="*" element={<Navigate to="/" />} />
       </Route>
     </Routes>
   );
