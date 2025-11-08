@@ -26,24 +26,32 @@ export default function GoalList() {
 
 
   // 🔹 Banner va Component ma’lumotlarini olish
-   useEffect(() => {
-    const fetchComponent = async () => {
-      try {
-        const res = await fetch(`${BASE_API_URL}/components`);
-        const data = await res.json();
-        const filtered = data.filter(
-          (item) => String(item.banner_id) === String(id)
-        );
-        setComponentData(filtered);
-      } catch (err) {
-        console.error("❌ Ma'lumot olishda xatolik:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+// ✅ Ma'lumotni olish
+useEffect(() => {
+  const fetchComponent = async () => {
+    try {
+      const res = await fetch(`${BASE_API_URL}/components`);
+      const data = await res.json();
+      const filtered = data.filter(
+        (item) => String(item.banner_id) === String(id)
+      );
+      setComponentData(filtered);
+    } catch (err) {
+      console.error("❌ Ma'lumot olishda xatolik:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchComponent();
-  }, [id]);
+  fetchComponent();
+}, [id]);
+
+// ✅ Agar ma'lumot bo'lmasa → asosiy sahifaga o'tkazish
+useEffect(() => {
+  if (!loading && componentData.length === 0) {
+    navigate("/");  // 🔹 Home ga redirect
+  }
+}, [loading, componentData, navigate]);
 
   if (loading) {
     return (

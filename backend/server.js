@@ -33,7 +33,7 @@ app.use(express.urlencoded({ limit: "1000mb", extended: true, parameterLimit: 10
 app.get("/", (req, res) => {
   res.send("🚀 Server is running");
 });
-app.use("/uploads", express.static("uploads")); // rasm ko‘rsatish uchun
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/upload", uploadRoutes);
 
 

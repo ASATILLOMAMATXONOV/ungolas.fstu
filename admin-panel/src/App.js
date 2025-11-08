@@ -26,6 +26,7 @@ import NewPageList from "./pages/NewPageList";
 import NewPageCreate from "./pages/NewPageCreate";
 import NewPageEdit from "./pages/NewPageEdit";
 import Login from "./Login";
+import Topbar from "./components/Topbar";
 
 
 
@@ -46,6 +47,7 @@ function App() {
     <Routes>
       <Route path="/" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
+        
 
         <Route path="Menus" element={<Menus />} />
         <Route path="Menu" element={<Menu />} />

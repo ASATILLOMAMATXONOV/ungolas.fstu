@@ -1,0 +1,2 @@
+const bcrypt = require("bcrypt");
+bcrypt.hash("Ungoals.2025.TSNQ", 10).then(console.log);

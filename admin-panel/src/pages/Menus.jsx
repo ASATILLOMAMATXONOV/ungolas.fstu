@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -13,7 +13,10 @@ import {
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { Save } from "@mui/icons-material";
+
 import { Editor } from "@tinymce/tinymce-react";
+
+
 import { BASE_API_URL } from "../config";
 
 export default function MenuCrud() {
@@ -33,14 +36,6 @@ export default function MenuCrud() {
     has_content: false,
   });
 
-  // 🧠 TinyMCE uchun referenslar
-  const editorRefs = {
-    uz: useRef(null),
-    ru: useRef(null),
-    en: useRef(null),
-  };
-
-  // 🔹 ID bo‘yicha ma’lumotni olish (edit holati)
   useEffect(() => {
     if (id) {
       fetch(`${BASE_API_URL}/menus/${id}`)
@@ -60,12 +55,10 @@ export default function MenuCrud() {
     }
   }, [id]);
 
-  // 🔹 Input o‘zgarishlarini boshqarish
   const handleChange = (field, value) => {
     setMenuData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // 💾 Saqlash funksiyasi
   const handleSave = async () => {
     setLoading(true);
     try {
@@ -113,75 +106,81 @@ export default function MenuCrud() {
     }
   };
 
-  // ⚙️ TinyMCE sozlamalari
-  const getEditorConfig = (lang) => ({
-    height: 400,
-    menubar: "file edit view insert format tools table help",
-     plugins: [
-                      "advlist",
-                      "autolink",
-                      "lists",
-                      "link",
-                      "image",
-                      "charmap",
-                      "preview",
-                      "anchor",
-                      "searchreplace",
-                      "visualblocks",
-                      "code",
-                      "fullscreen",
-                      "insertdatetime",
-                      "media",
-                      "table",
-                      "help",
-                      "wordcount",
-                      "emoticons",
-                    ],
-    toolbar:
-      "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | " +
-      "alignleft aligncenter alignright alignjustify lineheight | bullist numlist outdent indent | link image media table | " +
-      "removeformat | code fullscreen preview help",
-    automatic_uploads: true,
-    images_upload_url: `${BASE_API_URL}/upload`,
-    file_picker_types: "image",
-    file_picker_callback: (cb) => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.onchange = async function () {
-        const file = this.files[0];
-        const formData = new FormData();
-        formData.append("file", file);
+    /* ----------------------- ⚙️ TinyMCE sozlamalari ----------------------- */
+    const editorConfig = {
+      height: 400,
+      menubar: "file edit view insert format tools table help",
+      plugins: [
+        "advlist",
+        "autolink",
+        "lists",
+        "link",
+        "image",
+        "charmap",
+        "preview",
+        "anchor",
+        "searchreplace",
+        "visualblocks",
+        "code",
+        "fullscreen",
+        "insertdatetime",
+        "media",
+        "table",
+        "help",
+        "wordcount",
+        "emoticons",
+      ],
+      toolbar:
+        "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | " +
+        "alignleft aligncenter alignright alignjustify lineheight | bullist numlist outdent indent | " +
+        "link image media table | removeformat | code fullscreen preview help",
+  
+      automatic_uploads: true,
+      file_picker_types: "image",
+      paste_data_images: true,
+  
+     file_picker_callback: (cb) => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
 
-        try {
-          const res = await fetch(`${BASE_API_URL}/upload`, {
-            method: "POST",
-            body: formData,
-          });
-          const data = await res.json();
-          cb(`${BASE_API_URL.replace("/api", "")}${data.location}`, {
-            title: file.name,
-          });
-        } catch (err) {
-          console.error("❌ Yuklashda xato:", err);
+  input.onchange = async function () {
+    const file = this.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch(`${BASE_API_URL}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+
+      cb(data.location, { title: file.name }); // ✅ Faqat URL
+    } catch (err) {
+      console.error("❌ Yuklashda xato:", err);
+    }
+  };
+
+  input.click();
+},
+
+  
+      content_style: `
+        body {
+          font-family: Helvetica, Arial, sans-serif;
+          font-size: 16px;
+          line-height: 1.6;
+          color: #333;
         }
-      };
-      input.click();
-    },
-    content_style: `
-      body {
-        font-family: Helvetica, Arial, sans-serif;
-        font-size: 16px;
-        line-height: 1.6;
-        color: #333;
-      }
-      img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 6px;
-      }
-    `,
-  });
+        img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 6px;
+        }
+      `,
+    };
+  
 
   return (
     <Box sx={{ p: 4 }}>
@@ -190,7 +189,6 @@ export default function MenuCrud() {
           {id ? "✏️ Menyuni tahrirlash" : "➕ Yangi menyu qo‘shish"}
         </Typography>
 
-        {/* --- Sarlavhalar --- */}
         <Typography variant="h6" mb={1}>
           Sarlavhalar
         </Typography>
@@ -199,15 +197,14 @@ export default function MenuCrud() {
             <TextField
               key={lang}
               label={`Sarlavha (${lang.toUpperCase()})`}
-              required
               fullWidth
+              required
               value={menuData[`title_${lang}`]}
               onChange={(e) => handleChange(`title_${lang}`, e.target.value)}
             />
           ))}
         </Stack>
 
-        {/* --- Kontent mavjudligi belgisi --- */}
         <FormControlLabel
           control={
             <Checkbox
@@ -220,82 +217,48 @@ export default function MenuCrud() {
           sx={{ mb: 2 }}
         />
 
-        {/* --- Kontentlar --- */}
         {menuData.has_content && (
           <>
             <Typography variant="h6" mb={2}>
               Kontentlar
             </Typography>
+
             <Stack spacing={3}>
-              {["uz", "ru", "en"].map((lang) => (
-                <Box key={lang}>
-                  <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-                    {lang.toUpperCase()} matni
-                  </Typography>
-                  <Editor
-                    apiKey="oz1anr2rkjjim9zxiypl9te00gazqqq43epqosng505m0ddf"
-                    value={menuData[`content_${lang}`]}
-                    onEditorChange={(content) =>
-                      handleChange(`content_${lang}`, content)
-                    }
-                    init={getEditorConfig(lang)}
-                  />
-                </Box>
-              ))}
+            {["uz", "ru", "en"].map((lang) => (
+  <Box key={lang}>
+    <Typography variant="subtitle1" mb={1} fontWeight="bold">
+      {lang.toUpperCase()} matni
+    </Typography>
+
+    <Editor
+      apiKey="oz1anr2rkjjim9zxiypl9te00gazqqq43epqosng505m0ddf"
+      value={menuData[`content_${lang}`]}   // ✅ To‘g‘ri
+      init={editorConfig}
+      onEditorChange={(content) => handleChange(`content_${lang}`, content)} // ✅ To‘g‘ri
+    />
+  </Box>
+))}
+
             </Stack>
           </>
         )}
 
-        {/* --- Tugmalar --- */}
-        <Box textAlign="right" mt={4} display="flex" justifyContent="right" gap={2}>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => navigate("/menu")}
-            sx={{
-              borderRadius: 3,
-              px: 3,
-              py: 1.2,
-              fontWeight: "bold",
-              textTransform: "none",
-            }}
-          >
-            🔙 Bekor qilish
+        <Box mt={4} display="flex" justifyContent="right" gap={2}>
+          <Button variant="outlined" color="error" onClick={() => navigate("/menu")}>
+            Bekor qilish
           </Button>
-
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Save />}
-            onClick={handleSave}
-            disabled={loading}
-            sx={{
-              textTransform: "none",
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              fontWeight: "bold",
-            }}
-          >
+          <Button variant="contained" color="primary" startIcon={<Save />} onClick={handleSave}>
             {loading ? "⏳ Saqlanmoqda..." : "Saqlash"}
           </Button>
         </Box>
       </Paper>
 
-      {/* --- Snackbar --- */}
       <Snackbar
         open={alert.open}
-        autoHideDuration={2500}
+        autoHideDuration={2000}
         onClose={() => setAlert({ ...alert, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert
-          onClose={() => setAlert({ ...alert, open: false })}
-          severity={alert.type}
-          variant="filled"
-        >
-          {alert.message}
-        </Alert>
+        <Alert severity={alert.type}>{alert.message}</Alert>
       </Snackbar>
     </Box>
   );
